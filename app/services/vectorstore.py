@@ -122,7 +122,7 @@ async def upsert_points(
             id=uid,
             vector={
                 "dense": vec,
-                "bm25": sparse,
+                "sparse": sparse,
             },
             payload=pay,
         )
@@ -158,7 +158,7 @@ async def hybrid_search(
         prefetch=[
             models.Prefetch(
                 query=sparse_query,
-                using="bm25",
+                using="sparse",
                 limit=prefetch_limit,
             ),
             models.Prefetch(

@@ -29,14 +29,14 @@ class SourceChunk(BaseModel):
     doc_id: str
     filename: str
     page: int | None = None
-    score: float | None = None  # relevance score after reranking
-    snippet: str | None = None  # short preview of the chunk
+    score: float | None = None
+    snippet: str | None = None
 
 
 class ChatResponse(BaseModel):
     session_id: str
     answer: str
-    sources: list[SourceChunk] = Field(default_factory=list)  # richer than list[str]
+    sources: list[SourceChunk] = Field(default_factory=list)
 
 
 class ChatHistoryItem(BaseModel):

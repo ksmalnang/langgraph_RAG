@@ -22,7 +22,7 @@ async def lifespan(_app: FastAPI) -> AsyncIterator[None]:
     logger = get_logger(__name__)
     logger.info("\n\033[41;37m[START]\033[0m \nStarting RAG Chatbot API ...")
 
-    yield  # ← application runs here
+    yield
 
     # Cleanup on shutdown
     logger.info("\n\033[41;37m[STOP]\033[0m \nShutting down ...")
