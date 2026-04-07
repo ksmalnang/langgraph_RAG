@@ -58,3 +58,11 @@ Live-mode (real services + current corpus):
   --k-eval 5
 ```
 
+### Re-ingestion Identity Rules
+
+To keep benchmark comparisons stable:
+- same document identity: normalized filename-derived `doc_id`
+- same chunk identity: deterministic hash of `doc_id + chunk_index`
+- re-ingestion behavior: replace prior chunks for the same `doc_id` before upsert
+
+This prevents silent duplicate accumulation when the same source file is ingested again.

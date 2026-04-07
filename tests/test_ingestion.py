@@ -7,6 +7,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 
 from app.ingestion.chunker import Chunk
+from app.utils.helpers import generate_chunk_point_id
 
 
 @pytest.mark.asyncio
@@ -36,13 +37,21 @@ async def test_upsert_chunks_batch():
             return_value=[[0.1, 0.2, 0.3], [0.4, 0.5, 0.6]]
         )
         mock_vs.ensure_collection = AsyncMock()
+        mock_vs.delete_points_by_doc_id = AsyncMock()
         mock_vs.upsert_points = AsyncMock()
 
         result = await upsert_chunks(chunks, doc_id="abc", filename="doc.pdf")
 
     assert result == 2
     mock_embed.embed_texts.assert_called_once()
+    mock_vs.delete_points_by_doc_id.assert_called_once_with("abc")
     mock_vs.upsert_points.assert_called_once()
+
+    call_kwargs = mock_vs.upsert_points.call_args.kwargs
+    assert call_kwargs["ids"] == [
+        generate_chunk_point_id("abc", 0),
+        generate_chunk_point_id("abc", 1),
+    ]
 
 
 def test_chunk_dataclass():
@@ -58,6 +67,12 @@ def test_chunk_page_defaults_to_none():
     """Chunk.page defaults to None when not provided."""
     chunk = Chunk(text="no page", headings=[], chunk_index=0)
     assert chunk.page is None
+
+
+def test_generate_doc_id_is_case_insensitive():
+    from app.utils.helpers import generate_doc_id
+
+    assert generate_doc_id("Admin_Guide.PDF") == generate_doc_id("admin_guide.pdf")
 
 
 @pytest.mark.asyncio
@@ -91,3 +106,35 @@ async def test_pipeline_ingest():
     mock_parse.assert_called_once()
     mock_chunk.assert_called_once_with(mock_doc)
     mock_upsert.assert_called_once()
+
+
+@pytest.mark.asyncio
+async def test_upsert_chunks_reingestion_replaces_same_doc_points():
+    """Repeated ingestion should replace prior document points deterministically."""
+    from app.ingestion.upserter import upsert_chunks
+
+    chunks = [
+        Chunk(text="Chunk 1", headings=["A"], chunk_index=0, page=1),
+        Chunk(text="Chunk 2", headings=["B"], chunk_index=1, page=1),
+    ]
+
+    with (
+        patch("app.ingestion.upserter.embed_svc") as mock_embed,
+        patch("app.ingestion.upserter.vs") as mock_vs,
+    ):
+        mock_embed.embed_texts = AsyncMock(
+            return_value=[[0.1, 0.2, 0.3], [0.4, 0.5, 0.6]]
+        )
+        mock_vs.ensure_collection = AsyncMock()
+        mock_vs.delete_points_by_doc_id = AsyncMock()
+        mock_vs.upsert_points = AsyncMock()
+
+        await upsert_chunks(chunks, doc_id="doc-fixed", filename="admin.pdf")
+        await upsert_chunks(chunks, doc_id="doc-fixed", filename="admin.pdf")
+
+    # Explicit replacement should run each ingestion call.
+    assert mock_vs.delete_points_by_doc_id.call_count == 2
+
+    first_ids = mock_vs.upsert_points.call_args_list[0].kwargs["ids"]
+    second_ids = mock_vs.upsert_points.call_args_list[1].kwargs["ids"]
+    assert first_ids == second_ids

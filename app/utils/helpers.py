@@ -7,8 +7,15 @@ import uuid
 
 
 def generate_doc_id(filename: str) -> str:
-    """Deterministic document ID from filename."""
-    return hashlib.sha256(filename.encode()).hexdigest()[:16]
+    """Deterministic document ID from normalized filename."""
+    normalized = filename.strip().lower()
+    return hashlib.sha256(normalized.encode()).hexdigest()[:16]
+
+
+def generate_chunk_point_id(doc_id: str, chunk_index: int) -> str:
+    """Deterministic chunk point ID from document identity + chunk index."""
+    raw = f"{doc_id}:{chunk_index}"
+    return hashlib.sha256(raw.encode()).hexdigest()[:24]
 
 
 def generate_point_id() -> str:
