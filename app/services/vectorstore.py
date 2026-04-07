@@ -6,8 +6,11 @@ from typing import Any
 
 from fastembed import SparseTextEmbedding
 from qdrant_client import AsyncQdrantClient, models
+from qdrant_client.http.exceptions import ResponseHandlingException
 
 from app.config import get_settings
+from app.services.resilience import elapsed_ms, now_ms, retry_async
+from app.utils.exceptions import VectorStoreError
 from app.utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -60,6 +63,7 @@ async def get_qdrant_client() -> AsyncQdrantClient:
         _client = AsyncQdrantClient(
             url=settings.qdrant_url,
             api_key=settings.qdrant_api_key or None,
+            timeout=settings.qdrant_timeout_seconds,
         )
     return _client
 
@@ -72,24 +76,47 @@ async def ensure_collection(vector_size: int) -> None:
     """
     settings = get_settings()
     client = await get_qdrant_client()
-    collections = await client.get_collections()
+    start_ms = now_ms()
+    try:
+        collections = await retry_async(
+            operation="get_collections",
+            dependency="qdrant",
+            fn=client.get_collections,
+            retry_on=(ResponseHandlingException, TimeoutError),
+        )
+    except Exception as exc:
+        logger.error(
+            "Dependency failure dependency=qdrant operation=get_collections mode=unexpected latency_ms=%.1f",
+            elapsed_ms(start_ms),
+            exc_info=True,
+        )
+        raise VectorStoreError("Failed to read Qdrant collections") from exc
     names = [c.name for c in collections.collections]
 
     if settings.collection_name not in names:
-        await client.create_collection(
-            collection_name=settings.collection_name,
-            vectors_config={
-                "dense": models.VectorParams(
-                    size=vector_size,
-                    distance=models.Distance.COSINE,
-                ),
-            },
-            sparse_vectors_config={
-                "bm25": models.SparseVectorParams(
-                    modifier=models.Modifier.IDF,
-                ),
-            },
-        )
+        start_ms = now_ms()
+        try:
+            await client.create_collection(
+                collection_name=settings.collection_name,
+                vectors_config={
+                    "dense": models.VectorParams(
+                        size=vector_size,
+                        distance=models.Distance.COSINE,
+                    ),
+                },
+                sparse_vectors_config={
+                    "bm25": models.SparseVectorParams(
+                        modifier=models.Modifier.IDF,
+                    ),
+                },
+            )
+        except Exception as exc:
+            logger.error(
+                "Dependency failure dependency=qdrant operation=create_collection mode=unexpected latency_ms=%.1f",
+                elapsed_ms(start_ms),
+                exc_info=True,
+            )
+            raise VectorStoreError("Failed to create Qdrant collection") from exc
         logger.info(
             "Created Qdrant collection '%s' (dense dim=%d + BM25 sparse)",
             settings.collection_name,
@@ -128,10 +155,20 @@ async def upsert_points(
         )
         for uid, vec, sparse, pay in zip(ids, vectors, sparse_vectors, payloads, strict=False)
     ]
-    await client.upsert(
-        collection_name=settings.collection_name,
-        points=points,
-    )
+    start_ms = now_ms()
+    try:
+        await client.upsert(
+            collection_name=settings.collection_name,
+            points=points,
+        )
+    except Exception as exc:
+        logger.error(
+            "Dependency failure dependency=qdrant operation=upsert mode=unexpected points=%d latency_ms=%.1f",
+            len(points),
+            elapsed_ms(start_ms),
+            exc_info=True,
+        )
+        raise VectorStoreError("Failed to upsert vectors to Qdrant") from exc
     logger.info("Upserted %d points into '%s'", len(points), settings.collection_name)
 
 
@@ -153,24 +190,42 @@ async def hybrid_search(
     # Generate BM25 sparse query vector client-side via fastembed
     sparse_query = _encode_sparse_query(query_text)
 
-    results = await client.query_points(
-        collection_name=settings.collection_name,
-        prefetch=[
-            models.Prefetch(
-                query=sparse_query,
-                using="sparse",
-                limit=prefetch_limit,
-            ),
-            models.Prefetch(
-                query=query_vector,
-                using="dense",
-                limit=prefetch_limit,
-            ),
-        ],
-        query=models.FusionQuery(fusion=models.Fusion.RRF),
-        limit=top_k,
-        with_payload=True,
-    )
+    start_ms = now_ms()
+
+    async def _query():
+        return await client.query_points(
+            collection_name=settings.collection_name,
+            prefetch=[
+                models.Prefetch(
+                    query=sparse_query,
+                    using="sparse",
+                    limit=prefetch_limit,
+                ),
+                models.Prefetch(
+                    query=query_vector,
+                    using="dense",
+                    limit=prefetch_limit,
+                ),
+            ],
+            query=models.FusionQuery(fusion=models.Fusion.RRF),
+            limit=top_k,
+            with_payload=True,
+        )
+
+    try:
+        results = await retry_async(
+            operation="query_points",
+            dependency="qdrant",
+            fn=_query,
+            retry_on=(ResponseHandlingException, TimeoutError),
+        )
+    except Exception as exc:
+        logger.error(
+            "Dependency failure dependency=qdrant operation=query_points mode=unexpected latency_ms=%.1f",
+            elapsed_ms(start_ms),
+            exc_info=True,
+        )
+        raise VectorStoreError("Failed to query Qdrant") from exc
 
     docs: list[dict[str, Any]] = []
     for point in results.points:

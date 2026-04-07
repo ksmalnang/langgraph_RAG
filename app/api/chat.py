@@ -14,6 +14,7 @@ from app.schemas import (
     ChatResponse,
     SourceChunk,
 )
+from app.utils.exceptions import AppError
 from app.utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -71,6 +72,8 @@ async def chat(request: ChatRequest) -> ChatResponse:
     try:
         graph = _get_graph()
         result = await graph.ainvoke(initial_state)
+    except AppError:
+        raise
     except Exception as exc:
         logger.exception("Agent invocation failed: %s", exc)
         raise HTTPException(

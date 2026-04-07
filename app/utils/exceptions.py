@@ -55,6 +55,41 @@ class LLMError(AppError):
         super().__init__(message, status_code=502, code="LLM_FAILED")
 
 
+class EmbeddingError(AppError):
+    """Raised when embedding generation fails."""
+
+    def __init__(self, message: str = "Embedding generation failed") -> None:
+        super().__init__(message, status_code=502, code="EMBEDDING_FAILED")
+
+
+class VectorStoreError(AppError):
+    """Raised when Qdrant operations fail."""
+
+    def __init__(self, message: str = "Vector store operation failed") -> None:
+        super().__init__(message, status_code=502, code="VECTORSTORE_FAILED")
+
+
+class MemoryStoreError(AppError):
+    """Raised when Redis memory/session operations fail."""
+
+    def __init__(self, message: str = "Session store operation failed") -> None:
+        super().__init__(message, status_code=503, code="MEMORYSTORE_FAILED")
+
+
+class SiakadAuthError(AppError):
+    """Raised when SIAKAD authentication fails."""
+
+    def __init__(self, message: str = "SIAKAD authentication failed") -> None:
+        super().__init__(message, status_code=401, code="SIAKAD_AUTH_FAILED")
+
+
+class SiakadScrapeError(AppError):
+    """Raised when SIAKAD data scraping fails."""
+
+    def __init__(self, message: str = "SIAKAD scraping failed") -> None:
+        super().__init__(message, status_code=502, code="SIAKAD_SCRAPE_FAILED")
+
+
 # ── FastAPI handlers ────────────────────────────────────
 
 

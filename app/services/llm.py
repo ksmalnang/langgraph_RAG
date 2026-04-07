@@ -19,6 +19,8 @@ def get_llm(temperature: float = 0.2) -> ChatOpenAI:
         openai_api_base=settings.openrouter_base_url,
         temperature=temperature,
         max_tokens=2048,
+        timeout=settings.llm_timeout_seconds,
+        max_retries=0,
     )
 
 
@@ -31,5 +33,7 @@ def get_llm_cheap(temperature: float = 0.1) -> ChatOpenAI:
         openai_api_base=settings.openrouter_base_url,
         temperature=temperature,
         max_tokens=2048,
+        timeout=settings.llm_timeout_seconds,
+        max_retries=0,
         extra_body={"provider": {"only": ["stepfun/fp8"]}},
     )

@@ -6,7 +6,10 @@ import logging
 from bs4 import BeautifulSoup
 import httpx
 
+from app.config import get_settings
+from app.services.resilience import retry_async
 from app.services.memory import get_redis
+from app.utils.exceptions import MemoryStoreError, SiakadAuthError
 
 logger = logging.getLogger(__name__)
 
@@ -27,8 +30,22 @@ HEADERS_BASE = {
 
 async def _login(client: httpx.AsyncClient, email: str, password: str) -> None:
     """Fetch CSRF token lalu POST credentials."""
-    resp = await client.get(LOGIN_URL, headers=HEADERS_BASE)
-    resp.raise_for_status()
+    try:
+        resp = await retry_async(
+            operation="login_page_get",
+            dependency="siakad",
+            fn=lambda: client.get(LOGIN_URL, headers=HEADERS_BASE),
+            retry_on=(httpx.TimeoutException, httpx.TransportError),
+        )
+        resp.raise_for_status()
+    except httpx.TimeoutException as exc:
+        raise SiakadAuthError("SIAKAD login page request timed out") from exc
+    except httpx.HTTPStatusError as exc:
+        raise SiakadAuthError(
+            f"SIAKAD login page returned HTTP {exc.response.status_code}"
+        ) from exc
+    except httpx.TransportError as exc:
+        raise SiakadAuthError("SIAKAD login page request failed due to network error") from exc
 
     soup = BeautifulSoup(resp.text, "html.parser")
     try:
@@ -36,7 +53,7 @@ async def _login(client: httpx.AsyncClient, email: str, password: str) -> None:
         client_id_val = soup.find("input", {"name": "client_id"})["value"]
         redirect_uri_val = soup.find("input", {"name": "redirect_uri"})["value"]
     except (TypeError, KeyError):
-        raise ValueError("Gagal ekstrak CSRF token dari halaman login.")
+        raise SiakadAuthError("Gagal ekstrak CSRF token dari halaman login.")
 
     payload = {
         "email": email,
@@ -47,14 +64,21 @@ async def _login(client: httpx.AsyncClient, email: str, password: str) -> None:
         "redirect_uri": redirect_uri_val,
     }
 
-    resp_post = await client.post(
-        LOGIN_URL,
-        data=payload,
-        headers={**HEADERS_BASE, "Content-Type": "application/x-www-form-urlencoded"},
-    )
+    try:
+        resp_post = await client.post(
+            LOGIN_URL,
+            data=payload,
+            headers={**HEADERS_BASE, "Content-Type": "application/x-www-form-urlencoded"},
+        )
+    except httpx.TimeoutException as exc:
+        raise SiakadAuthError("SIAKAD credential submission timed out") from exc
+    except httpx.TransportError as exc:
+        raise SiakadAuthError(
+            "SIAKAD credential submission failed due to network error"
+        ) from exc
 
     if "Email atau Password salah" in resp_post.text or str(resp_post.url) == LOGIN_URL:
-        raise ValueError("Kredensial tidak valid.")
+        raise SiakadAuthError("Kredensial tidak valid.")
 
 
 async def _activate_siakad(client: httpx.AsyncClient) -> None:
@@ -69,22 +93,35 @@ async def _activate_siakad(client: httpx.AsyncClient) -> None:
         "koderole": "mhs",
         "kodeunit": "55201",
     }
-    resp = await client.post(
-        SIAKAD_LOGIN_URL,
-        data=payload,
-        headers={
-            **HEADERS_BASE,
-            "Content-Type": "application/x-www-form-urlencoded",
-            "Referer": "https://situ2.unpas.ac.id/gate/menu",
-        },
-    )
-    resp.raise_for_status()
+    try:
+        resp = await client.post(
+            SIAKAD_LOGIN_URL,
+            data=payload,
+            headers={
+                **HEADERS_BASE,
+                "Content-Type": "application/x-www-form-urlencoded",
+                "Referer": "https://situ2.unpas.ac.id/gate/menu",
+            },
+        )
+        resp.raise_for_status()
+    except httpx.TimeoutException as exc:
+        raise SiakadAuthError("SIAKAD activation timed out") from exc
+    except httpx.HTTPStatusError as exc:
+        raise SiakadAuthError(
+            f"SIAKAD activation returned HTTP {exc.response.status_code}"
+        ) from exc
+    except httpx.TransportError as exc:
+        raise SiakadAuthError("SIAKAD activation failed due to network error") from exc
 
 
 async def init_siakad_session(session_id: str, email: str, password: str) -> bool:
     """Login ke SIAKAD dan simpan cookies ke Redis dengan TTL 1 jam."""
+    settings = get_settings()
     try:
-        async with httpx.AsyncClient(follow_redirects=True, timeout=30.0) as client:
+        async with httpx.AsyncClient(
+            follow_redirects=True,
+            timeout=settings.siakad_timeout_seconds,
+        ) as client:
             await _login(client, email, password)
             await _activate_siakad(client)
 
@@ -97,11 +134,27 @@ async def init_siakad_session(session_id: str, email: str, password: str) -> boo
             await r.setex(redis_key, 3600, cookie_str)
             logger.info("Session %s berhasil disimpan di Redis.", session_id)
             return True
-    except ValueError as e:
-        logger.warning("Kredensial tidak valid untuk %s: %s", session_id, e)
+    except SiakadAuthError as exc:
+        logger.warning(
+            "Dependency failure dependency=siakad operation=init_session flow=student mode=auth session_id=%s detail=%s",
+            session_id,
+            exc.message,
+        )
         return False
-    except Exception as e:
-        logger.error("Gagal inisiasi SIAKAD session untuk %s: %s", session_id, e)
+    except MemoryStoreError as exc:
+        logger.error(
+            "Dependency failure dependency=redis operation=setex_siakad_session flow=student mode=cache_write session_id=%s detail=%s",
+            session_id,
+            exc.message,
+        )
+        return False
+    except Exception as exc:
+        logger.error(
+            "Dependency failure dependency=siakad operation=init_session flow=student mode=unexpected session_id=%s error=%s",
+            session_id,
+            exc,
+            exc_info=True,
+        )
         return False
 
 
@@ -114,9 +167,11 @@ async def get_siakad_cookies(session_id: str) -> dict | None:
         if cookie_str:
             return json.loads(cookie_str)
         return None
-    except Exception as e:
-        logger.error(
-            "Redis unavailable saat mengambil cookies untuk %s: %s", session_id, e
+    except Exception as exc:
+        logger.warning(
+            "Dependency failure dependency=redis operation=get_siakad_cookies flow=student mode=read session_id=%s error=%s",
+            session_id,
+            exc,
         )
         return None
 

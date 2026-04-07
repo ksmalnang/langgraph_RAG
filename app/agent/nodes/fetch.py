@@ -8,6 +8,7 @@ from bs4 import BeautifulSoup
 import httpx
 
 from app.agent.state import FetchStudentInput, FetchStudentUpdate
+from app.config import get_settings
 from app.services.siakad_session import (
     cache_student_data,
     get_cached_student_data,
@@ -500,10 +501,13 @@ async def fetch_student_data(state: FetchStudentInput) -> FetchStudentUpdate:
         }
 
     cookies = httpx.Cookies(cookies_dict)
+    settings = get_settings()
 
     try:
         async with httpx.AsyncClient(
-            follow_redirects=True, timeout=30.0, cookies=cookies
+            follow_redirects=True,
+            timeout=settings.siakad_timeout_seconds,
+            cookies=cookies,
         ) as client:
             # Jalankan semua scraper secara concurrent
             # _scrape_nilaimhs di-await terpisah karena GET dulu baru POST
@@ -539,13 +543,42 @@ async def fetch_student_data(state: FetchStudentInput) -> FetchStudentUpdate:
         }
 
     except ConnectionError as e:
-        logger.warning("[fetch] Session expired: %s", e)
+        logger.warning(
+            "Dependency failure dependency=siakad operation=fetch_student_data flow=student mode=auth session_id=%s detail=%s",
+            session_id,
+            e,
+        )
+        return {
+            "student_data": None,
+            "student_fetch_error": True,
+        }
+    except httpx.TimeoutException as e:
+        logger.warning(
+            "Dependency failure dependency=siakad operation=fetch_student_data flow=student mode=timeout session_id=%s detail=%s",
+            session_id,
+            e,
+        )
+        return {
+            "student_data": None,
+            "student_fetch_error": True,
+        }
+    except httpx.TransportError as e:
+        logger.warning(
+            "Dependency failure dependency=siakad operation=fetch_student_data flow=student mode=transport session_id=%s detail=%s",
+            session_id,
+            e,
+        )
         return {
             "student_data": None,
             "student_fetch_error": True,
         }
     except Exception as e:
-        logger.error("[fetch] Error tidak terduga: %s", e)
+        logger.error(
+            "Dependency failure dependency=siakad operation=fetch_student_data flow=student mode=unexpected session_id=%s detail=%s",
+            session_id,
+            e,
+            exc_info=True,
+        )
         return {
             "student_data": None,
             "student_fetch_error": True,

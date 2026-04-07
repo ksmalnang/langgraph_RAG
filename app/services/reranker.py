@@ -7,6 +7,8 @@ from typing import Any
 import httpx
 
 from app.config import get_settings
+from app.services.resilience import elapsed_ms, now_ms, retry_async
+from app.utils.exceptions import RerankerError
 from app.utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -44,10 +46,47 @@ async def rerank(
         "top_n": top_n,
     }
 
-    async with httpx.AsyncClient(timeout=30.0) as client:
-        response = await client.post(JINA_RERANK_URL, json=payload, headers=headers)
-        response.raise_for_status()
-        data = response.json()
+    start_ms = now_ms()
+
+    async def _request() -> dict:
+        async with httpx.AsyncClient(timeout=settings.reranker_timeout_seconds) as client:
+            response = await client.post(JINA_RERANK_URL, json=payload, headers=headers)
+            response.raise_for_status()
+            return response.json()
+
+    try:
+        data = await retry_async(
+            operation="rerank",
+            dependency="jina",
+            fn=_request,
+            retry_on=(httpx.TimeoutException, httpx.TransportError),
+        )
+    except httpx.TimeoutException as exc:
+        logger.error(
+            "Dependency failure dependency=jina operation=rerank mode=timeout latency_ms=%.1f",
+            elapsed_ms(start_ms),
+        )
+        raise RerankerError("Reranker request timed out") from exc
+    except httpx.HTTPStatusError as exc:
+        logger.error(
+            "Dependency failure dependency=jina operation=rerank mode=http_status status=%s latency_ms=%.1f",
+            exc.response.status_code,
+            elapsed_ms(start_ms),
+        )
+        raise RerankerError("Reranker request failed with upstream HTTP error") from exc
+    except httpx.TransportError as exc:
+        logger.error(
+            "Dependency failure dependency=jina operation=rerank mode=transport latency_ms=%.1f",
+            elapsed_ms(start_ms),
+        )
+        raise RerankerError("Reranker request failed due to network error") from exc
+    except Exception as exc:
+        logger.error(
+            "Dependency failure dependency=jina operation=rerank mode=unexpected latency_ms=%.1f",
+            elapsed_ms(start_ms),
+            exc_info=True,
+        )
+        raise RerankerError("Reranker request failed unexpectedly") from exc
 
     reranked: list[dict[str, Any]] = []
     for item in data.get("results", []):
