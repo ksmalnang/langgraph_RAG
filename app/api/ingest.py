@@ -6,11 +6,14 @@ from pathlib import Path
 import shutil
 import tempfile
 
-from fastapi import APIRouter, BackgroundTasks, HTTPException, UploadFile
+from fastapi import APIRouter, BackgroundTasks, Header, HTTPException, Request, UploadFile
 
+from app.config import get_settings
 from app.ingestion.pipeline import ingest_document
+from app.services.rate_limiter import allow_request
 from app.schemas import IngestResponse
 from app.utils.logger import get_logger
+from app.utils.security import is_local_env
 
 logger = get_logger(__name__)
 
@@ -36,12 +39,34 @@ def _validate_file(file: UploadFile) -> None:
 async def ingest(
     file: UploadFile,
     background_tasks: BackgroundTasks,
+    request: Request,
+    x_ingest_token: str | None = Header(default=None, alias="X-Ingest-Token"),
 ) -> IngestResponse:
     """Upload a document and kick off ingestion.
 
     The file is saved to a temp directory, then the ingestion pipeline
     runs as a **background task** so the response returns quickly.
     """
+    settings = get_settings()
+    app_env = settings.app_env
+
+    if settings.ingest_api_key:
+        if x_ingest_token != settings.ingest_api_key:
+            raise HTTPException(status_code=403, detail="Invalid ingest token.")
+    elif not is_local_env(app_env):
+        raise HTTPException(
+            status_code=503,
+            detail="Ingest route is disabled until INGEST_API_KEY is configured.",
+        )
+
+    client_ip = request.client.host if request.client else "unknown"
+    if not allow_request(
+        key=f"ingest:{client_ip}",
+        limit=settings.ingest_rate_limit,
+        window_seconds=settings.rate_limit_window_seconds,
+    ):
+        raise HTTPException(status_code=429, detail="Too many ingest requests.")
+
     _validate_file(file)
     assert file.filename is not None  # guarded by _validate_file
 

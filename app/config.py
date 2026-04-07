@@ -2,6 +2,7 @@
 
 from functools import lru_cache
 
+from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -46,6 +47,15 @@ class Settings(BaseSettings):
 
     # ── App ─────────────────────────────────────────────
     log_level: str = "INFO"
+    app_env: str = "development"
+    cors_allow_origins: str = ""
+    ingest_api_key: str | None = None
+
+    # ── Route abuse protection ──────────────────────────
+    rate_limit_window_seconds: int = 60
+    auth_login_rate_limit: int = 8
+    chat_rate_limit: int = 40
+    ingest_rate_limit: int = 6
 
     # ── Integration hardening ───────────────────────────
     llm_timeout_seconds: float = 45.0
@@ -58,6 +68,11 @@ class Settings(BaseSettings):
     # Retries are only used for idempotent remote reads.
     service_retry_attempts: int = 2
     service_retry_backoff_seconds: float = 0.3
+
+    @field_validator("app_env")
+    @classmethod
+    def normalize_app_env(cls, value: str) -> str:
+        return value.strip().lower()
 
 
 @lru_cache

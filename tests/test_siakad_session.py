@@ -7,7 +7,10 @@ from app.services.siakad_session import (
     cache_student_data,
     get_cached_student_data,
     get_siakad_cookies,
+    has_student_access_binding,
     init_siakad_session,
+    issue_student_access_token,
+    verify_student_access_token,
 )
 
 
@@ -174,3 +177,25 @@ async def test_get_cached_student_data__redis_error(mock_redis):
     mock_redis.get.side_effect = Exception("redis out of memory")
     res = await get_cached_student_data("sess-12")
     assert res is None
+
+
+@pytest.mark.asyncio
+async def test_issue_and_verify_student_access_token(mock_redis):
+    token = await issue_student_access_token("sess-13")
+    assert isinstance(token, str)
+    assert len(token) > 20
+
+    # Ensure verification works with stored hash.
+    stored_hash = mock_redis.setex.call_args[0][2]
+    mock_redis.get.return_value = stored_hash
+    is_valid = await verify_student_access_token("sess-13", token)
+    assert is_valid is True
+
+
+@pytest.mark.asyncio
+async def test_has_student_access_binding(mock_redis):
+    mock_redis.exists.return_value = 1
+    assert await has_student_access_binding("sess-14") is True
+
+    mock_redis.exists.return_value = 0
+    assert await has_student_access_binding("sess-14") is False
