@@ -1,0 +1,444 @@
+{
+  "dataset_id": "retrieval_eval.json",
+  "evaluation_date": "2026-04-08",
+  "corpus_id": "fixture-admin-kb-v1",
+  "evaluation_mode": "fixture_predictions",
+  "retrieval_config": {
+    "k_eval": 5,
+    "retrieval_top_k": 10,
+    "rerank_top_n": 5,
+    "relevance_threshold": 0.17
+  },
+  "dependencies": {
+    "embedding_model": "qwen/qwen3-embedding-8b",
+    "reranker_model": "jina-reranker-v3"
+  },
+  "stages": {
+    "pre_rerank": {
+      "query_count": 20,
+      "k_eval": 5,
+      "metrics": {
+        "hit@1": 0.5,
+        "hit@3": 0.85,
+        "hit@5": 0.95,
+        "mrr": 0.6833,
+        "recall@5": 0.95
+      },
+      "per_query": [
+        {
+          "name": "q01_admission_requirements",
+          "k_target": 3,
+          "rank": 3,
+          "hit@1": 0.0,
+          "hit@3": 1.0,
+          "hit@5": 1.0,
+          "mrr": 0.3333,
+          "recall@5": 1.0
+        },
+        {
+          "name": "q02_admission_schedule",
+          "k_target": 3,
+          "rank": 1,
+          "hit@1": 1.0,
+          "hit@3": 1.0,
+          "hit@5": 1.0,
+          "mrr": 1.0,
+          "recall@5": 1.0
+        },
+        {
+          "name": "q03_academic_calendar_start",
+          "k_target": 3,
+          "rank": 2,
+          "hit@1": 0.0,
+          "hit@3": 1.0,
+          "hit@5": 1.0,
+          "mrr": 0.5,
+          "recall@5": 1.0
+        },
+        {
+          "name": "q04_academic_calendar_exam",
+          "k_target": 5,
+          "rank": 4,
+          "hit@1": 0.0,
+          "hit@3": 0.0,
+          "hit@5": 1.0,
+          "mrr": 0.25,
+          "recall@5": 1.0
+        },
+        {
+          "name": "q05_krs_deadline",
+          "k_target": 3,
+          "rank": 1,
+          "hit@1": 1.0,
+          "hit@3": 1.0,
+          "hit@5": 1.0,
+          "mrr": 1.0,
+          "recall@5": 1.0
+        },
+        {
+          "name": "q06_krs_revision",
+          "k_target": 5,
+          "rank": 3,
+          "hit@1": 0.0,
+          "hit@3": 1.0,
+          "hit@5": 1.0,
+          "mrr": 0.3333,
+          "recall@5": 1.0
+        },
+        {
+          "name": "q07_ukt_payment_channel",
+          "k_target": 3,
+          "rank": 1,
+          "hit@1": 1.0,
+          "hit@3": 1.0,
+          "hit@5": 1.0,
+          "mrr": 1.0,
+          "recall@5": 1.0
+        },
+        {
+          "name": "q08_ukt_penalty",
+          "k_target": 5,
+          "rank": 4,
+          "hit@1": 0.0,
+          "hit@3": 0.0,
+          "hit@5": 1.0,
+          "mrr": 0.25,
+          "recall@5": 1.0
+        },
+        {
+          "name": "q09_leave_requirements",
+          "k_target": 3,
+          "rank": 1,
+          "hit@1": 1.0,
+          "hit@3": 1.0,
+          "hit@5": 1.0,
+          "mrr": 1.0,
+          "recall@5": 1.0
+        },
+        {
+          "name": "q10_leave_reactivation",
+          "k_target": 5,
+          "rank": 2,
+          "hit@1": 0.0,
+          "hit@3": 1.0,
+          "hit@5": 1.0,
+          "mrr": 0.5,
+          "recall@5": 1.0
+        },
+        {
+          "name": "q11_thesis_registration",
+          "k_target": 3,
+          "rank": 1,
+          "hit@1": 1.0,
+          "hit@3": 1.0,
+          "hit@5": 1.0,
+          "mrr": 1.0,
+          "recall@5": 1.0
+        },
+        {
+          "name": "q12_thesis_examiner",
+          "k_target": 5,
+          "rank": 2,
+          "hit@1": 0.0,
+          "hit@3": 1.0,
+          "hit@5": 1.0,
+          "mrr": 0.5,
+          "recall@5": 1.0
+        },
+        {
+          "name": "q13_scholarship_types",
+          "k_target": 3,
+          "rank": 1,
+          "hit@1": 1.0,
+          "hit@3": 1.0,
+          "hit@5": 1.0,
+          "mrr": 1.0,
+          "recall@5": 1.0
+        },
+        {
+          "name": "q14_scholarship_documents",
+          "k_target": 5,
+          "rank": 2,
+          "hit@1": 0.0,
+          "hit@3": 1.0,
+          "hit@5": 1.0,
+          "mrr": 0.5,
+          "recall@5": 1.0
+        },
+        {
+          "name": "q15_transfer_policy",
+          "k_target": 5,
+          "rank": null,
+          "hit@1": 0.0,
+          "hit@3": 0.0,
+          "hit@5": 0.0,
+          "mrr": 0.0,
+          "recall@5": 0.0
+        },
+        {
+          "name": "q16_transfer_timeline",
+          "k_target": 5,
+          "rank": 1,
+          "hit@1": 1.0,
+          "hit@3": 1.0,
+          "hit@5": 1.0,
+          "mrr": 1.0,
+          "recall@5": 1.0
+        },
+        {
+          "name": "q17_graduation_requirements",
+          "k_target": 3,
+          "rank": 1,
+          "hit@1": 1.0,
+          "hit@3": 1.0,
+          "hit@5": 1.0,
+          "mrr": 1.0,
+          "recall@5": 1.0
+        },
+        {
+          "name": "q18_graduation_registration",
+          "k_target": 5,
+          "rank": 2,
+          "hit@1": 0.0,
+          "hit@3": 1.0,
+          "hit@5": 1.0,
+          "mrr": 0.5,
+          "recall@5": 1.0
+        },
+        {
+          "name": "q19_online_service_helpdesk",
+          "k_target": 3,
+          "rank": 1,
+          "hit@1": 1.0,
+          "hit@3": 1.0,
+          "hit@5": 1.0,
+          "mrr": 1.0,
+          "recall@5": 1.0
+        },
+        {
+          "name": "q20_payment_or_helpdesk",
+          "k_target": 5,
+          "rank": 1,
+          "hit@1": 1.0,
+          "hit@3": 1.0,
+          "hit@5": 1.0,
+          "mrr": 1.0,
+          "recall@5": 1.0
+        }
+      ]
+    },
+    "post_rerank": {
+      "query_count": 20,
+      "k_eval": 5,
+      "metrics": {
+        "hit@1": 0.85,
+        "hit@3": 1.0,
+        "hit@5": 1.0,
+        "mrr": 0.9167,
+        "recall@5": 1.0
+      },
+      "per_query": [
+        {
+          "name": "q01_admission_requirements",
+          "k_target": 3,
+          "rank": 1,
+          "hit@1": 1.0,
+          "hit@3": 1.0,
+          "hit@5": 1.0,
+          "mrr": 1.0,
+          "recall@5": 1.0
+        },
+        {
+          "name": "q02_admission_schedule",
+          "k_target": 3,
+          "rank": 1,
+          "hit@1": 1.0,
+          "hit@3": 1.0,
+          "hit@5": 1.0,
+          "mrr": 1.0,
+          "recall@5": 1.0
+        },
+        {
+          "name": "q03_academic_calendar_start",
+          "k_target": 3,
+          "rank": 1,
+          "hit@1": 1.0,
+          "hit@3": 1.0,
+          "hit@5": 1.0,
+          "mrr": 1.0,
+          "recall@5": 1.0
+        },
+        {
+          "name": "q04_academic_calendar_exam",
+          "k_target": 5,
+          "rank": 2,
+          "hit@1": 0.0,
+          "hit@3": 1.0,
+          "hit@5": 1.0,
+          "mrr": 0.5,
+          "recall@5": 1.0
+        },
+        {
+          "name": "q05_krs_deadline",
+          "k_target": 3,
+          "rank": 1,
+          "hit@1": 1.0,
+          "hit@3": 1.0,
+          "hit@5": 1.0,
+          "mrr": 1.0,
+          "recall@5": 1.0
+        },
+        {
+          "name": "q06_krs_revision",
+          "k_target": 5,
+          "rank": 1,
+          "hit@1": 1.0,
+          "hit@3": 1.0,
+          "hit@5": 1.0,
+          "mrr": 1.0,
+          "recall@5": 1.0
+        },
+        {
+          "name": "q07_ukt_payment_channel",
+          "k_target": 3,
+          "rank": 1,
+          "hit@1": 1.0,
+          "hit@3": 1.0,
+          "hit@5": 1.0,
+          "mrr": 1.0,
+          "recall@5": 1.0
+        },
+        {
+          "name": "q08_ukt_penalty",
+          "k_target": 5,
+          "rank": 2,
+          "hit@1": 0.0,
+          "hit@3": 1.0,
+          "hit@5": 1.0,
+          "mrr": 0.5,
+          "recall@5": 1.0
+        },
+        {
+          "name": "q09_leave_requirements",
+          "k_target": 3,
+          "rank": 1,
+          "hit@1": 1.0,
+          "hit@3": 1.0,
+          "hit@5": 1.0,
+          "mrr": 1.0,
+          "recall@5": 1.0
+        },
+        {
+          "name": "q10_leave_reactivation",
+          "k_target": 5,
+          "rank": 1,
+          "hit@1": 1.0,
+          "hit@3": 1.0,
+          "hit@5": 1.0,
+          "mrr": 1.0,
+          "recall@5": 1.0
+        },
+        {
+          "name": "q11_thesis_registration",
+          "k_target": 3,
+          "rank": 1,
+          "hit@1": 1.0,
+          "hit@3": 1.0,
+          "hit@5": 1.0,
+          "mrr": 1.0,
+          "recall@5": 1.0
+        },
+        {
+          "name": "q12_thesis_examiner",
+          "k_target": 5,
+          "rank": 1,
+          "hit@1": 1.0,
+          "hit@3": 1.0,
+          "hit@5": 1.0,
+          "mrr": 1.0,
+          "recall@5": 1.0
+        },
+        {
+          "name": "q13_scholarship_types",
+          "k_target": 3,
+          "rank": 1,
+          "hit@1": 1.0,
+          "hit@3": 1.0,
+          "hit@5": 1.0,
+          "mrr": 1.0,
+          "recall@5": 1.0
+        },
+        {
+          "name": "q14_scholarship_documents",
+          "k_target": 5,
+          "rank": 1,
+          "hit@1": 1.0,
+          "hit@3": 1.0,
+          "hit@5": 1.0,
+          "mrr": 1.0,
+          "recall@5": 1.0
+        },
+        {
+          "name": "q15_transfer_policy",
+          "k_target": 5,
+          "rank": 3,
+          "hit@1": 0.0,
+          "hit@3": 1.0,
+          "hit@5": 1.0,
+          "mrr": 0.3333,
+          "recall@5": 1.0
+        },
+        {
+          "name": "q16_transfer_timeline",
+          "k_target": 5,
+          "rank": 1,
+          "hit@1": 1.0,
+          "hit@3": 1.0,
+          "hit@5": 1.0,
+          "mrr": 1.0,
+          "recall@5": 1.0
+        },
+        {
+          "name": "q17_graduation_requirements",
+          "k_target": 3,
+          "rank": 1,
+          "hit@1": 1.0,
+          "hit@3": 1.0,
+          "hit@5": 1.0,
+          "mrr": 1.0,
+          "recall@5": 1.0
+        },
+        {
+          "name": "q18_graduation_registration",
+          "k_target": 5,
+          "rank": 1,
+          "hit@1": 1.0,
+          "hit@3": 1.0,
+          "hit@5": 1.0,
+          "mrr": 1.0,
+          "recall@5": 1.0
+        },
+        {
+          "name": "q19_online_service_helpdesk",
+          "k_target": 3,
+          "rank": 1,
+          "hit@1": 1.0,
+          "hit@3": 1.0,
+          "hit@5": 1.0,
+          "mrr": 1.0,
+          "recall@5": 1.0
+        },
+        {
+          "name": "q20_payment_or_helpdesk",
+          "k_target": 5,
+          "rank": 1,
+          "hit@1": 1.0,
+          "hit@3": 1.0,
+          "hit@5": 1.0,
+          "mrr": 1.0,
+          "recall@5": 1.0
+        }
+      ]
+    }
+  }
+}

@@ -5,7 +5,7 @@ from __future__ import annotations
 from app.ingestion.chunker import Chunk
 from app.services import embeddings as embed_svc
 from app.services import vectorstore as vs
-from app.utils.helpers import generate_point_id
+from app.utils.helpers import generate_chunk_point_id
 from app.utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -43,6 +43,7 @@ async def upsert_chunks(
         return 0
 
     total = 0
+    collection_prepared = False
 
     for start in range(0, len(chunks), BATCH_SIZE):
         batch = chunks[start : start + BATCH_SIZE]
@@ -54,12 +55,15 @@ async def upsert_chunks(
         # Embed the batch (dense vectors)
         vectors = await embed_svc.embed_texts(enriched_texts)
 
-        # On the very first batch, make sure the collection exists
-        if start == 0:
+        # Ensure the collection exists, then replace any older points
+        # for the same doc_id so re-ingestion stays deterministic.
+        if not collection_prepared:
             await vs.ensure_collection(vector_size=len(vectors[0]))
+            await vs.delete_points_by_doc_id(doc_id)
+            collection_prepared = True
 
         # Build point data — keep original text for display, enriched for BM25
-        ids = [generate_point_id() for _ in batch]
+        ids = [generate_chunk_point_id(doc_id, c.chunk_index) for c in batch]
         payloads = [
             {
                 "text": c.text,

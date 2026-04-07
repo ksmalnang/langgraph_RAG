@@ -1,0 +1,287 @@
+{
+  "pre_rerank": {
+    "q01_admission_requirements": [
+      {"filename": "kalender_akademik_2025.pdf"},
+      {"filename": "panduan_krs.pdf"},
+      {"filename": "registrasi_mahasiswa_baru.pdf"},
+      {"filename": "layanan_administrasi_online.pdf"},
+      {"filename": "wisuda_dan_yudisium.pdf"}
+    ],
+    "q02_admission_schedule": [
+      {"filename": "registrasi_mahasiswa_baru.pdf"},
+      {"filename": "kalender_akademik_2025.pdf"},
+      {"filename": "panduan_krs.pdf"},
+      {"filename": "beasiswa_unpas.pdf"},
+      {"filename": "pembayaran_ukt.pdf"}
+    ],
+    "q03_academic_calendar_start": [
+      {"filename": "panduan_krs.pdf"},
+      {"filename": "kalender_akademik_2025.pdf"},
+      {"filename": "pembayaran_ukt.pdf"},
+      {"filename": "registrasi_mahasiswa_baru.pdf"},
+      {"filename": "cuti_akademik.pdf"}
+    ],
+    "q04_academic_calendar_exam": [
+      {"filename": "wisuda_dan_yudisium.pdf"},
+      {"filename": "layanan_administrasi_online.pdf"},
+      {"filename": "pembayaran_ukt.pdf"},
+      {"filename": "kalender_akademik_2025.pdf"},
+      {"filename": "registrasi_mahasiswa_baru.pdf"}
+    ],
+    "q05_krs_deadline": [
+      {"filename": "panduan_krs.pdf"},
+      {"filename": "registrasi_mahasiswa_baru.pdf"},
+      {"filename": "kalender_akademik_2025.pdf"},
+      {"filename": "pembayaran_ukt.pdf"},
+      {"filename": "cuti_akademik.pdf"}
+    ],
+    "q06_krs_revision": [
+      {"filename": "cuti_akademik.pdf"},
+      {"filename": "pembayaran_ukt.pdf"},
+      {"filename": "panduan_krs.pdf"},
+      {"filename": "kalender_akademik_2025.pdf"},
+      {"filename": "layanan_administrasi_online.pdf"}
+    ],
+    "q07_ukt_payment_channel": [
+      {"filename": "pembayaran_ukt.pdf"},
+      {"filename": "panduan_krs.pdf"},
+      {"filename": "registrasi_mahasiswa_baru.pdf"},
+      {"filename": "beasiswa_unpas.pdf"},
+      {"filename": "kalender_akademik_2025.pdf"}
+    ],
+    "q08_ukt_penalty": [
+      {"filename": "panduan_krs.pdf"},
+      {"filename": "layanan_administrasi_online.pdf"},
+      {"filename": "wisuda_dan_yudisium.pdf"},
+      {"filename": "pembayaran_ukt.pdf"},
+      {"filename": "cuti_akademik.pdf"}
+    ],
+    "q09_leave_requirements": [
+      {"filename": "cuti_akademik.pdf"},
+      {"filename": "panduan_krs.pdf"},
+      {"filename": "kalender_akademik_2025.pdf"},
+      {"filename": "registrasi_mahasiswa_baru.pdf"},
+      {"filename": "layanan_administrasi_online.pdf"}
+    ],
+    "q10_leave_reactivation": [
+      {"filename": "panduan_krs.pdf"},
+      {"filename": "cuti_akademik.pdf"},
+      {"filename": "layanan_administrasi_online.pdf"},
+      {"filename": "pembayaran_ukt.pdf"},
+      {"filename": "wisuda_dan_yudisium.pdf"}
+    ],
+    "q11_thesis_registration": [
+      {"filename": "skripsi_dan_sidang.pdf"},
+      {"filename": "panduan_krs.pdf"},
+      {"filename": "registrasi_mahasiswa_baru.pdf"},
+      {"filename": "kalender_akademik_2025.pdf"},
+      {"filename": "wisuda_dan_yudisium.pdf"}
+    ],
+    "q12_thesis_examiner": [
+      {"filename": "wisuda_dan_yudisium.pdf"},
+      {"filename": "skripsi_dan_sidang.pdf"},
+      {"filename": "panduan_krs.pdf"},
+      {"filename": "kalender_akademik_2025.pdf"},
+      {"filename": "beasiswa_unpas.pdf"}
+    ],
+    "q13_scholarship_types": [
+      {"filename": "beasiswa_unpas.pdf"},
+      {"filename": "registrasi_mahasiswa_baru.pdf"},
+      {"filename": "panduan_krs.pdf"},
+      {"filename": "pembayaran_ukt.pdf"},
+      {"filename": "layanan_administrasi_online.pdf"}
+    ],
+    "q14_scholarship_documents": [
+      {"filename": "panduan_krs.pdf"},
+      {"filename": "beasiswa_unpas.pdf"},
+      {"filename": "pembayaran_ukt.pdf"},
+      {"filename": "layanan_administrasi_online.pdf"},
+      {"filename": "registrasi_mahasiswa_baru.pdf"}
+    ],
+    "q15_transfer_policy": [
+      {"filename": "panduan_krs.pdf"},
+      {"filename": "registrasi_mahasiswa_baru.pdf"},
+      {"filename": "kalender_akademik_2025.pdf"},
+      {"filename": "layanan_administrasi_online.pdf"},
+      {"filename": "wisuda_dan_yudisium.pdf"}
+    ],
+    "q16_transfer_timeline": [
+      {"filename": "perpindahan_prodi.pdf"},
+      {"filename": "panduan_krs.pdf"},
+      {"filename": "registrasi_mahasiswa_baru.pdf"},
+      {"filename": "kalender_akademik_2025.pdf"},
+      {"filename": "layanan_administrasi_online.pdf"}
+    ],
+    "q17_graduation_requirements": [
+      {"filename": "wisuda_dan_yudisium.pdf"},
+      {"filename": "skripsi_dan_sidang.pdf"},
+      {"filename": "layanan_administrasi_online.pdf"},
+      {"filename": "kalender_akademik_2025.pdf"},
+      {"filename": "pembayaran_ukt.pdf"}
+    ],
+    "q18_graduation_registration": [
+      {"filename": "layanan_administrasi_online.pdf"},
+      {"filename": "wisuda_dan_yudisium.pdf"},
+      {"filename": "pembayaran_ukt.pdf"},
+      {"filename": "skripsi_dan_sidang.pdf"},
+      {"filename": "kalender_akademik_2025.pdf"}
+    ],
+    "q19_online_service_helpdesk": [
+      {"filename": "layanan_administrasi_online.pdf"},
+      {"filename": "pembayaran_ukt.pdf"},
+      {"filename": "wisuda_dan_yudisium.pdf"},
+      {"filename": "panduan_krs.pdf"},
+      {"filename": "registrasi_mahasiswa_baru.pdf"}
+    ],
+    "q20_payment_or_helpdesk": [
+      {"filename": "pembayaran_ukt.pdf"},
+      {"filename": "registrasi_mahasiswa_baru.pdf"},
+      {"filename": "kalender_akademik_2025.pdf"},
+      {"filename": "skripsi_dan_sidang.pdf"},
+      {"filename": "layanan_administrasi_online.pdf"}
+    ]
+  },
+  "post_rerank": {
+    "q01_admission_requirements": [
+      {"filename": "registrasi_mahasiswa_baru.pdf"},
+      {"filename": "kalender_akademik_2025.pdf"},
+      {"filename": "panduan_krs.pdf"},
+      {"filename": "layanan_administrasi_online.pdf"},
+      {"filename": "wisuda_dan_yudisium.pdf"}
+    ],
+    "q02_admission_schedule": [
+      {"filename": "registrasi_mahasiswa_baru.pdf"},
+      {"filename": "kalender_akademik_2025.pdf"},
+      {"filename": "panduan_krs.pdf"},
+      {"filename": "beasiswa_unpas.pdf"},
+      {"filename": "pembayaran_ukt.pdf"}
+    ],
+    "q03_academic_calendar_start": [
+      {"filename": "kalender_akademik_2025.pdf"},
+      {"filename": "panduan_krs.pdf"},
+      {"filename": "pembayaran_ukt.pdf"},
+      {"filename": "registrasi_mahasiswa_baru.pdf"},
+      {"filename": "cuti_akademik.pdf"}
+    ],
+    "q04_academic_calendar_exam": [
+      {"filename": "registrasi_mahasiswa_baru.pdf"},
+      {"filename": "kalender_akademik_2025.pdf"},
+      {"filename": "pembayaran_ukt.pdf"},
+      {"filename": "layanan_administrasi_online.pdf"},
+      {"filename": "wisuda_dan_yudisium.pdf"}
+    ],
+    "q05_krs_deadline": [
+      {"filename": "panduan_krs.pdf"},
+      {"filename": "registrasi_mahasiswa_baru.pdf"},
+      {"filename": "kalender_akademik_2025.pdf"},
+      {"filename": "pembayaran_ukt.pdf"},
+      {"filename": "cuti_akademik.pdf"}
+    ],
+    "q06_krs_revision": [
+      {"filename": "panduan_krs.pdf"},
+      {"filename": "cuti_akademik.pdf"},
+      {"filename": "pembayaran_ukt.pdf"},
+      {"filename": "kalender_akademik_2025.pdf"},
+      {"filename": "layanan_administrasi_online.pdf"}
+    ],
+    "q07_ukt_payment_channel": [
+      {"filename": "pembayaran_ukt.pdf"},
+      {"filename": "panduan_krs.pdf"},
+      {"filename": "registrasi_mahasiswa_baru.pdf"},
+      {"filename": "beasiswa_unpas.pdf"},
+      {"filename": "kalender_akademik_2025.pdf"}
+    ],
+    "q08_ukt_penalty": [
+      {"filename": "layanan_administrasi_online.pdf"},
+      {"filename": "pembayaran_ukt.pdf"},
+      {"filename": "panduan_krs.pdf"},
+      {"filename": "wisuda_dan_yudisium.pdf"},
+      {"filename": "cuti_akademik.pdf"}
+    ],
+    "q09_leave_requirements": [
+      {"filename": "cuti_akademik.pdf"},
+      {"filename": "panduan_krs.pdf"},
+      {"filename": "kalender_akademik_2025.pdf"},
+      {"filename": "registrasi_mahasiswa_baru.pdf"},
+      {"filename": "layanan_administrasi_online.pdf"}
+    ],
+    "q10_leave_reactivation": [
+      {"filename": "cuti_akademik.pdf"},
+      {"filename": "panduan_krs.pdf"},
+      {"filename": "layanan_administrasi_online.pdf"},
+      {"filename": "pembayaran_ukt.pdf"},
+      {"filename": "wisuda_dan_yudisium.pdf"}
+    ],
+    "q11_thesis_registration": [
+      {"filename": "skripsi_dan_sidang.pdf"},
+      {"filename": "panduan_krs.pdf"},
+      {"filename": "registrasi_mahasiswa_baru.pdf"},
+      {"filename": "kalender_akademik_2025.pdf"},
+      {"filename": "wisuda_dan_yudisium.pdf"}
+    ],
+    "q12_thesis_examiner": [
+      {"filename": "skripsi_dan_sidang.pdf"},
+      {"filename": "wisuda_dan_yudisium.pdf"},
+      {"filename": "panduan_krs.pdf"},
+      {"filename": "kalender_akademik_2025.pdf"},
+      {"filename": "beasiswa_unpas.pdf"}
+    ],
+    "q13_scholarship_types": [
+      {"filename": "beasiswa_unpas.pdf"},
+      {"filename": "registrasi_mahasiswa_baru.pdf"},
+      {"filename": "panduan_krs.pdf"},
+      {"filename": "pembayaran_ukt.pdf"},
+      {"filename": "layanan_administrasi_online.pdf"}
+    ],
+    "q14_scholarship_documents": [
+      {"filename": "beasiswa_unpas.pdf"},
+      {"filename": "panduan_krs.pdf"},
+      {"filename": "pembayaran_ukt.pdf"},
+      {"filename": "layanan_administrasi_online.pdf"},
+      {"filename": "registrasi_mahasiswa_baru.pdf"}
+    ],
+    "q15_transfer_policy": [
+      {"filename": "panduan_krs.pdf"},
+      {"filename": "registrasi_mahasiswa_baru.pdf"},
+      {"filename": "perpindahan_prodi.pdf"},
+      {"filename": "layanan_administrasi_online.pdf"},
+      {"filename": "wisuda_dan_yudisium.pdf"}
+    ],
+    "q16_transfer_timeline": [
+      {"filename": "perpindahan_prodi.pdf"},
+      {"filename": "panduan_krs.pdf"},
+      {"filename": "registrasi_mahasiswa_baru.pdf"},
+      {"filename": "kalender_akademik_2025.pdf"},
+      {"filename": "layanan_administrasi_online.pdf"}
+    ],
+    "q17_graduation_requirements": [
+      {"filename": "wisuda_dan_yudisium.pdf"},
+      {"filename": "skripsi_dan_sidang.pdf"},
+      {"filename": "layanan_administrasi_online.pdf"},
+      {"filename": "kalender_akademik_2025.pdf"},
+      {"filename": "pembayaran_ukt.pdf"}
+    ],
+    "q18_graduation_registration": [
+      {"filename": "wisuda_dan_yudisium.pdf"},
+      {"filename": "layanan_administrasi_online.pdf"},
+      {"filename": "pembayaran_ukt.pdf"},
+      {"filename": "skripsi_dan_sidang.pdf"},
+      {"filename": "kalender_akademik_2025.pdf"}
+    ],
+    "q19_online_service_helpdesk": [
+      {"filename": "layanan_administrasi_online.pdf"},
+      {"filename": "pembayaran_ukt.pdf"},
+      {"filename": "wisuda_dan_yudisium.pdf"},
+      {"filename": "panduan_krs.pdf"},
+      {"filename": "registrasi_mahasiswa_baru.pdf"}
+    ],
+    "q20_payment_or_helpdesk": [
+      {"filename": "pembayaran_ukt.pdf"},
+      {"filename": "layanan_administrasi_online.pdf"},
+      {"filename": "registrasi_mahasiswa_baru.pdf"},
+      {"filename": "kalender_akademik_2025.pdf"},
+      {"filename": "skripsi_dan_sidang.pdf"}
+    ]
+  }
+}
+

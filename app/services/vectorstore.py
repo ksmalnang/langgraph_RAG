@@ -172,6 +172,39 @@ async def upsert_points(
     logger.info("Upserted %d points into '%s'", len(points), settings.collection_name)
 
 
+async def delete_points_by_doc_id(doc_id: str) -> None:
+    """Delete all points belonging to a single document identity."""
+    settings = get_settings()
+    client = await get_qdrant_client()
+
+    selector = models.Filter(
+        must=[
+            models.FieldCondition(
+                key="doc_id",
+                match=models.MatchValue(value=doc_id),
+            )
+        ]
+    )
+
+    start_ms = now_ms()
+    try:
+        await client.delete(
+            collection_name=settings.collection_name,
+            points_selector=selector,
+            wait=True,
+        )
+    except Exception as exc:
+        logger.error(
+            "Dependency failure dependency=qdrant operation=delete_doc_points mode=unexpected doc_id=%s latency_ms=%.1f",
+            doc_id,
+            elapsed_ms(start_ms),
+            exc_info=True,
+        )
+        raise VectorStoreError("Failed to delete existing document points") from exc
+
+    logger.info("Deleted previous points for doc_id=%s", doc_id)
+
+
 async def hybrid_search(
     query_text: str,
     query_vector: list[float],

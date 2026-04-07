@@ -1,0 +1,131 @@
+[
+  {
+    "name": "q01_admission_requirements",
+    "query": "Apa saja persyaratan pendaftaran mahasiswa baru Teknik Informatika?",
+    "expected_filename": "registrasi_mahasiswa_baru.pdf",
+    "k_target": 3
+  },
+  {
+    "name": "q02_admission_schedule",
+    "query": "Kapan jadwal pendaftaran gelombang 2 dibuka?",
+    "expected_filename": "registrasi_mahasiswa_baru.pdf",
+    "k_target": 3
+  },
+  {
+    "name": "q03_academic_calendar_start",
+    "query": "Tanggal mulai perkuliahan semester ganjil 2025 kapan?",
+    "expected_filename": "kalender_akademik_2025.pdf",
+    "k_target": 3
+  },
+  {
+    "name": "q04_academic_calendar_exam",
+    "query": "Kapan UAS semester ganjil dijadwalkan?",
+    "expected_filename": "kalender_akademik_2025.pdf",
+    "k_target": 5
+  },
+  {
+    "name": "q05_krs_deadline",
+    "query": "Batas akhir pengisian KRS online kapan?",
+    "expected_filename": "panduan_krs.pdf",
+    "k_target": 3
+  },
+  {
+    "name": "q06_krs_revision",
+    "query": "Bagaimana prosedur revisi KRS setelah submit?",
+    "expected_filename": "panduan_krs.pdf",
+    "k_target": 5
+  },
+  {
+    "name": "q07_ukt_payment_channel",
+    "query": "Pembayaran UKT bisa lewat bank apa saja?",
+    "expected_filename": "pembayaran_ukt.pdf",
+    "k_target": 3
+  },
+  {
+    "name": "q08_ukt_penalty",
+    "query": "Apakah ada denda jika terlambat bayar UKT?",
+    "expected_filename": "pembayaran_ukt.pdf",
+    "k_target": 5
+  },
+  {
+    "name": "q09_leave_requirements",
+    "query": "Syarat pengajuan cuti akademik apa saja?",
+    "expected_filename": "cuti_akademik.pdf",
+    "k_target": 3
+  },
+  {
+    "name": "q10_leave_reactivation",
+    "query": "Prosedur aktif kuliah kembali setelah cuti bagaimana?",
+    "expected_filename": "cuti_akademik.pdf",
+    "k_target": 5
+  },
+  {
+    "name": "q11_thesis_registration",
+    "query": "Bagaimana alur pendaftaran sidang skripsi?",
+    "expected_filename": "skripsi_dan_sidang.pdf",
+    "k_target": 3
+  },
+  {
+    "name": "q12_thesis_examiner",
+    "query": "Penentuan dosen penguji sidang skripsi diatur di mana?",
+    "expected_filename": "skripsi_dan_sidang.pdf",
+    "k_target": 5
+  },
+  {
+    "name": "q13_scholarship_types",
+    "query": "Jenis beasiswa internal kampus yang tersedia apa saja?",
+    "expected_filename": "beasiswa_unpas.pdf",
+    "k_target": 3
+  },
+  {
+    "name": "q14_scholarship_documents",
+    "query": "Dokumen wajib untuk pengajuan beasiswa apa?",
+    "expected_filename": "beasiswa_unpas.pdf",
+    "k_target": 5
+  },
+  {
+    "name": "q15_transfer_policy",
+    "query": "Syarat perpindahan program studi di fakultas teknik apa?",
+    "expected_filename": "perpindahan_prodi.pdf",
+    "k_target": 5
+  },
+  {
+    "name": "q16_transfer_timeline",
+    "query": "Kapan periode pengajuan perpindahan prodi dibuka?",
+    "expected_filename": "perpindahan_prodi.pdf",
+    "k_target": 5
+  },
+  {
+    "name": "q17_graduation_requirements",
+    "query": "Syarat ikut yudisium dan wisuda apa saja?",
+    "expected_filename": "wisuda_dan_yudisium.pdf",
+    "k_target": 3
+  },
+  {
+    "name": "q18_graduation_registration",
+    "query": "Alur pendaftaran wisuda dilakukan lewat sistem apa?",
+    "expected_filename": "wisuda_dan_yudisium.pdf",
+    "k_target": 5
+  },
+  {
+    "name": "q19_online_service_helpdesk",
+    "query": "Jika layanan administrasi online bermasalah, hubungi ke mana?",
+    "expected_filename": "layanan_administrasi_online.pdf",
+    "k_target": 3
+  },
+  {
+    "name": "q20_payment_or_helpdesk",
+    "query": "Informasi pembayaran UKT dan kontak layanan online ada di dokumen mana?",
+    "k_target": 5,
+    "expected_targets": [
+      {
+        "expected_filename": "pembayaran_ukt.pdf"
+      },
+      {
+        "expected_filename": "layanan_administrasi_online.pdf"
+      }
+    ],
+    "notes": "Multi-target query for recall sanity check."
+  }
+]
+
