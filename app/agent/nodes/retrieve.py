@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from app.agent.state import AgentState
+from app.agent.state import RetrieveInput, RetrieveUpdate
 from app.services.embeddings import embed_query
 from app.services.vectorstore import hybrid_search
 from app.utils.logger import get_logger
@@ -10,8 +10,8 @@ from app.utils.logger import get_logger
 logger = get_logger(__name__)
 
 
-async def retrieve_docs(state: AgentState) -> dict:
-    """Embed the query and run hybrid search (dense + BM25) via Qdrant."""
+async def retrieve_docs(state: RetrieveInput) -> RetrieveUpdate:
+    """Read the rewritten query and return raw retrieval documents."""
     query = state["query"]
     logger.info("Retrieving docs for: %s", query[:80])
 
