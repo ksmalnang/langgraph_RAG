@@ -7,7 +7,7 @@ from typing import Any
 from bs4 import BeautifulSoup
 import httpx
 
-from app.agent.state import AgentState
+from app.agent.state import FetchStudentInput, FetchStudentUpdate
 from app.services.siakad_session import (
     cache_student_data,
     get_cached_student_data,
@@ -452,7 +452,7 @@ async def _scrape_berita(
 # ============================================================
 
 
-async def fetch_student_data(state: AgentState) -> dict[str, Any]:
+async def fetch_student_data(state: FetchStudentInput) -> FetchStudentUpdate:
     """
     Node LangGraph: scrape semua data akademik mahasiswa dari SIAKAD.
 
@@ -479,7 +479,6 @@ async def fetch_student_data(state: AgentState) -> dict[str, Any]:
         return {
             "student_data": None,
             "student_fetch_error": True,
-            "need_retrieval": state.get("need_retrieval", False),
         }
 
     # 1. Cek cache Redis
@@ -489,7 +488,6 @@ async def fetch_student_data(state: AgentState) -> dict[str, Any]:
         return {
             "student_data": cached_data,
             "student_fetch_error": False,
-            "need_retrieval": state.get("need_retrieval", False),
         }
 
     # 2. Load cookies dari Redis
@@ -499,7 +497,6 @@ async def fetch_student_data(state: AgentState) -> dict[str, Any]:
         return {
             "student_data": None,
             "student_fetch_error": True,
-            "need_retrieval": state.get("need_retrieval", False),
         }
 
     cookies = httpx.Cookies(cookies_dict)
@@ -539,7 +536,6 @@ async def fetch_student_data(state: AgentState) -> dict[str, Any]:
         return {
             "student_data": student_data,
             "student_fetch_error": False,
-            "need_retrieval": state.get("need_retrieval", False),
         }
 
     except ConnectionError as e:
@@ -547,12 +543,10 @@ async def fetch_student_data(state: AgentState) -> dict[str, Any]:
         return {
             "student_data": None,
             "student_fetch_error": True,
-            "need_retrieval": state.get("need_retrieval", False),
         }
     except Exception as e:
         logger.error("[fetch] Error tidak terduga: %s", e)
         return {
             "student_data": None,
             "student_fetch_error": True,
-            "need_retrieval": state.get("need_retrieval", False),
         }

@@ -4,11 +4,37 @@ from __future__ import annotations
 
 from typing import Any, Literal
 
-from typing_extensions import TypedDict
+from typing_extensions import NotRequired, Required, TypedDict
+
+RouteName = Literal[
+    "fallback",
+    "retrieval_only",
+    "student_only",
+    "both",
+    "nilai_semester",
+]
 
 
-class AgentState(TypedDict, total=False):
-    """State flowing through the LangGraph agent.
+class ChatTurn(TypedDict, total=False):
+    """Single chat turn stored in conversation history."""
+
+    role: Required[str]
+    content: Required[str]
+    timestamp: NotRequired[str | None]
+
+
+class SourceReference(TypedDict, total=False):
+    """Minimal source payload returned by the rerank step and API."""
+
+    doc_id: Required[str]
+    filename: Required[str]
+    page: NotRequired[int | None]
+    score: NotRequired[float | None]
+    snippet: NotRequired[str]
+
+
+class SharedAgentState(TypedDict, total=False):
+    """State shared across all assistant capabilities.
 
     Fields
     ------
@@ -27,57 +53,130 @@ class AgentState(TypedDict, total=False):
     route : Literal["fallback", "retrieval_only", "student_only", "both"]
         Determined by `classify_query`, read by `route_after_classify`.
 
-    student_data : dict[str, Any] | None
-        Student data fetched by `fetch_student_data` (if any).
-    student_fetch_error : bool
-        Whether an error occurred while fetching student data.
-
-    need_retrieval : bool
-        Preserved from `route`; indicates if document retrieval is required.
-    documents : list[dict[str, Any]]
-        Raw documents returned from Qdrant search.
-    reranked_documents : list[dict[str, Any]]
-        Documents after Jina reranking.
-    relevance_ok : bool
-        Whether the top reranked document exceeds the relevance threshold.
-    rewrite_count : int
-        How many times the query has been rewritten (max cap).
     """
 
-    # ============================================================
-    # Main I/O
-    # ============================================================
-    query: str
-    session_id: str
-    answer: str
-    sources: list[dict[str, Any]]
+    query: Required[str]
+    session_id: Required[str]
+    answer: NotRequired[str]
+    sources: NotRequired[list[SourceReference]]
 
-    # ============================================================
-    # Memory
-    # ============================================================
-    chat_history: list[dict[str, Any]]
+    chat_history: NotRequired[list[ChatTurn]]
 
-    # ============================================================
-    # Routing
-    # Set by classify_query, read by route_after_classify
-    # ============================================================
-    route: Literal[
-        "fallback", "retrieval_only", "student_only", "both", "nilai_semester"
-    ]
+    route: NotRequired[RouteName]
+    need_retrieval: NotRequired[bool]
 
-    # ============================================================
-    # Student Data
-    # Set by fetch_student_data
-    # ============================================================
-    student_data: dict[str, Any] | None
-    student_fetch_error: bool
-    nilai_semester_detail: dict | None
 
-    # ============================================================
-    # Retrieval
-    # ============================================================
-    need_retrieval: bool  # preserved from route, read post-fetch
+class PublicAssistantState(TypedDict, total=False):
+    """State owned by the public/admin retrieval assistant."""
+
     documents: list[dict[str, Any]]
     reranked_documents: list[dict[str, Any]]
     relevance_ok: bool
     rewrite_count: int
+
+
+class StudentAssistantState(TypedDict, total=False):
+    """State owned by the authenticated student/SIAKAD assistant."""
+
+    student_data: dict[str, Any] | None
+    student_fetch_error: bool
+    nilai_semester_detail: dict | None
+
+
+class AgentState(
+    SharedAgentState,
+    PublicAssistantState,
+    StudentAssistantState,
+    total=False,
+):
+    """Combined LangGraph state used by the top-level router graph."""
+
+
+class ClassificationInput(TypedDict, total=False):
+    """Inputs required by the classify node."""
+
+    query: Required[str]
+    chat_history: NotRequired[list[ChatTurn]]
+
+
+class ClassificationUpdate(TypedDict):
+    """Fields written by the classify node."""
+
+    route: RouteName
+    need_retrieval: bool
+
+
+class RetrieveInput(TypedDict):
+    """Inputs required by the retrieval node."""
+
+    query: str
+
+
+class RetrieveUpdate(TypedDict):
+    """Fields written by the retrieval node."""
+
+    documents: list[dict[str, Any]]
+
+
+class RerankInput(TypedDict, total=False):
+    """Inputs required by the rerank node."""
+
+    query: Required[str]
+    documents: NotRequired[list[dict[str, Any]]]
+
+
+class RerankUpdate(TypedDict):
+    """Fields written by the rerank node."""
+
+    reranked_documents: list[dict[str, Any]]
+    relevance_ok: bool
+    sources: list[SourceReference]
+
+
+class RewriteInput(TypedDict, total=False):
+    """Inputs required by the query rewrite node."""
+
+    query: Required[str]
+    rewrite_count: NotRequired[int]
+
+
+class RewriteUpdate(TypedDict):
+    """Fields written by the query rewrite node."""
+
+    query: str
+    rewrite_count: int
+
+
+class GenerateAnswerInput(TypedDict, total=False):
+    """Inputs consumed when assembling the final prompt."""
+
+    query: Required[str]
+    chat_history: NotRequired[list[ChatTurn]]
+    reranked_documents: NotRequired[list[dict[str, Any]]]
+    student_data: NotRequired[dict[str, Any] | None]
+    nilai_semester_detail: NotRequired[dict[str, Any] | None]
+
+
+class GenerateAnswerUpdate(TypedDict):
+    """Fields written by answer-generation nodes."""
+
+    answer: str
+
+
+class GenerateFallbackUpdate(GenerateAnswerUpdate, total=False):
+    """Fallback generation also owns clearing source references."""
+
+    sources: list[SourceReference]
+
+
+class FetchStudentInput(TypedDict):
+    """Inputs required by the SIAKAD fetch node."""
+
+    session_id: str
+
+
+class FetchStudentUpdate(TypedDict):
+    """Fields written by the SIAKAD fetch node."""
+
+    student_data: dict[str, Any] | None
+    student_fetch_error: bool

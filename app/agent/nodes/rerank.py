@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from app.agent.state import AgentState
+from app.agent.state import RerankInput, RerankUpdate
 from app.config import get_settings
 from app.services.reranker import rerank
 from app.utils.logger import get_logger
@@ -10,8 +10,8 @@ from app.utils.logger import get_logger
 logger = get_logger(__name__)
 
 
-async def rerank_docs(state: AgentState) -> dict:
-    """Rerank retrieved documents and check relevance threshold."""
+async def rerank_docs(state: RerankInput) -> RerankUpdate:
+    """Read retrieval docs and return reranked docs plus source refs."""
     query = state["query"]
     documents = state.get("documents", [])
 
@@ -43,7 +43,7 @@ async def rerank_docs(state: AgentState) -> dict:
     )
 
     # Build rich source references matching SourceChunk schema
-    sources: list[dict] = []
+    sources = []
     seen_chunks: set[str] = set()
     for doc in reranked:
         chunk_key = f"{doc.get('doc_id', '')}:{doc.get('chunk_index', '')}"

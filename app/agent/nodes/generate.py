@@ -10,14 +10,21 @@ from app.agent.prompts import (
     REWRITE_SYSTEM_PROMPT,
     STUDENT_CONTEXT_TEMPLATE,
 )
-from app.agent.state import AgentState
+from app.agent.state import (
+    ChatTurn,
+    GenerateAnswerInput,
+    GenerateAnswerUpdate,
+    GenerateFallbackUpdate,
+    RewriteInput,
+    RewriteUpdate,
+)
 from app.services.llm import get_llm, get_llm_cheap
 from app.utils.logger import get_logger
 
 logger = get_logger(__name__)
 
 
-def _format_history(chat_history: list[dict]) -> str:
+def _format_history(chat_history: list[ChatTurn]) -> str:
     """Format chat history into a readable string."""
     if not chat_history:
         return ""
@@ -174,8 +181,8 @@ def _format_student_context(student_data: dict) -> str:
     )
 
 
-async def generate_answer(state: AgentState) -> dict:
-    """Generate an answer with document context (RAG path)."""
+async def generate_answer(state: GenerateAnswerInput) -> GenerateAnswerUpdate:
+    """Generate an answer from retrieval context and optional student context."""
     query = state["query"]
     history = state.get("chat_history", [])
     documents = state.get("reranked_documents", [])
@@ -214,8 +221,10 @@ async def generate_answer(state: AgentState) -> dict:
     return {"answer": answer}
 
 
-async def generate_answer_fallback(state: AgentState) -> dict:
-    """Generate an answer without document context (fallback path)."""
+async def generate_answer_fallback(
+    state: GenerateAnswerInput,
+) -> GenerateFallbackUpdate:
+    """Generate an answer without retrieval context."""
     query = state["query"]
     history = state.get("chat_history", [])
 
@@ -235,8 +244,8 @@ async def generate_answer_fallback(state: AgentState) -> dict:
     return {"answer": answer, "sources": []}
 
 
-async def rewrite_question(state: AgentState) -> dict:
-    """Rewrite the query for better retrieval results."""
+async def rewrite_question(state: RewriteInput) -> RewriteUpdate:
+    """Rewrite the query and increment only the rewrite counter."""
     query = state["query"]
     rewrite_count = state.get("rewrite_count", 0)
 

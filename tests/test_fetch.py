@@ -499,6 +499,7 @@ async def test_fetch_student_data__happy_path(
     state = {"session_id": "test-session-123", "need_retrieval": False}
     result = await fetch_student_data(state)
 
+    assert set(result) == {"student_data", "student_fetch_error"}
     assert result["student_fetch_error"] is False
     assert result["student_data"] is not None
     assert set(result["student_data"].keys()) == {"mahasiswa", "nilai_semester", "transkrip", "jadwal", "berita"}
@@ -526,6 +527,7 @@ async def test_fetch_student_data__cache_hit(mock_cache_get):
         result = await fetch_student_data(state)
 
         mock_get_cookies.assert_not_called()
+        assert set(result) == {"student_data", "student_fetch_error"}
         assert result["student_data"] == dummy_student_data
         assert result["student_fetch_error"] is False
 
@@ -547,6 +549,7 @@ async def test_fetch_student_data__session_expired(mock_nilaimhs, mock_get_cooki
         state = {"session_id": "test-session-123", "need_retrieval": False}
         result = await fetch_student_data(state)
 
+        assert set(result) == {"student_data", "student_fetch_error"}
         assert result["student_fetch_error"] is True
         assert result["student_data"] is None
 
@@ -555,6 +558,7 @@ async def test_fetch_student_data__session_expired(mock_nilaimhs, mock_get_cooki
 async def test_fetch_student_data__missing_session_id():
     state = {"need_retrieval": False}
     result = await fetch_student_data(state)
+    assert set(result) == {"student_data", "student_fetch_error"}
     assert result["student_fetch_error"] is True
     assert result["student_data"] is None
 
@@ -569,5 +573,6 @@ async def test_fetch_student_data__no_cookies(mock_get_cookies, mock_cache_get):
     state = {"session_id": "test-session-123", "need_retrieval": False}
     result = await fetch_student_data(state)
 
+    assert set(result) == {"student_data", "student_fetch_error"}
     assert result["student_fetch_error"] is True
     assert result["student_data"] is None

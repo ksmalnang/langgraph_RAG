@@ -27,6 +27,38 @@ def test_agent_state_typing():
     assert state["rewrite_count"] == 0
 
 
+def test_route_after_classify__public_routes():
+    from app.agent.graph import route_after_classify
+
+    assert route_after_classify({"route": "fallback"}) == "public_assistant"
+    assert route_after_classify({"route": "retrieval_only"}) == "public_assistant"
+
+
+def test_route_after_classify__student_routes():
+    from app.agent.graph import route_after_classify
+
+    assert route_after_classify({"route": "student_only"}) == "student_assistant"
+    assert route_after_classify({"route": "both"}) == "student_assistant"
+    assert route_after_classify({"route": "nilai_semester"}) == "student_assistant"
+
+
+def test_public_assistant_routes():
+    from app.agent.public_assistant import route_after_rerank, route_public_request
+
+    assert route_public_request({"route": "fallback"}) == "generate_answer_fallback"
+    assert route_public_request({"route": "retrieval_only"}) == "retrieve_docs"
+    assert route_after_rerank({"relevance_ok": True}) == "generate_answer"
+
+
+def test_student_assistant_routes():
+    from app.agent.student_assistant import route_after_fetch
+
+    assert route_after_fetch({"student_fetch_error": True}) == "generate_answer_fallback"
+    assert route_after_fetch({"route": "nilai_semester"}) == "fetch_nilai_semester"
+    assert route_after_fetch({"need_retrieval": True}) == "public_assistant"
+    assert route_after_fetch({"need_retrieval": False}) == "generate_answer"
+
+
 @pytest.mark.asyncio
 async def test_classify_query_retrieval():
     """classify_query sets need_retrieval=True for admin questions."""
@@ -42,6 +74,7 @@ async def test_classify_query_retrieval():
 
         result = await classify_query({"query": "How to register?", "session_id": "s1"})
 
+    assert set(result) == {"route", "need_retrieval"}
     assert result["need_retrieval"] is True
 
 
@@ -60,6 +93,7 @@ async def test_classify_query_fallback():
 
         result = await classify_query({"query": "Hello!", "session_id": "s1"})
 
+    assert set(result) == {"route", "need_retrieval"}
     assert result["need_retrieval"] is False
 
 
@@ -84,6 +118,7 @@ async def test_retrieve_docs():
 
         result = await retrieve_docs({"query": "test query", "session_id": "s1"})
 
+    assert set(result) == {"documents"}
     assert len(result["documents"]) == 2
     mock_embed.assert_called_once_with("test query")
     mock_search.assert_called_once_with(
@@ -105,9 +140,42 @@ async def test_store_memory():
 
 
 @pytest.mark.asyncio
+async def test_rerank_docs_returns_owned_fields_only():
+    from app.agent.nodes.rerank import rerank_docs
+
+    with (
+        patch("app.agent.nodes.rerank.rerank", new_callable=AsyncMock) as mock_rerank,
+        patch("app.agent.nodes.rerank.get_settings") as mock_settings,
+    ):
+        mock_rerank.return_value = [
+            {
+                "doc_id": "doc-1",
+                "chunk_index": 0,
+                "filename": "guide.pdf",
+                "page": 3,
+                "text": "helpful context",
+                "relevance_score": 0.91,
+            }
+        ]
+        mock_settings.return_value.filter_negative_scores = False
+        mock_settings.return_value.relevance_threshold = 0.5
+
+        result = await rerank_docs(
+            {
+                "query": "How do I register?",
+                "documents": [{"text": "helpful context"}],
+            }
+        )
+
+    assert set(result) == {"reranked_documents", "relevance_ok", "sources"}
+    assert result["relevance_ok"] is True
+    assert result["sources"][0]["doc_id"] == "doc-1"
+
+
+@pytest.mark.asyncio
 async def test_graph_compiles():
     """The agent graph compiles without errors."""
-    with patch("app.agent.graph.get_settings") as mock_settings:
+    with patch("app.agent.public_assistant.get_settings") as mock_settings:
         mock_settings.return_value.max_rewrite_count = 2
         from app.agent.graph import build_graph
 

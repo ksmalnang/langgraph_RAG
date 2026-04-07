@@ -8,15 +8,15 @@ from langchain_core.messages import HumanMessage, SystemMessage
 
 from app.agent.nodes.generate import _format_history
 from app.agent.prompts import CLASSIFY_SYSTEM_PROMPT
-from app.agent.state import AgentState
+from app.agent.state import ClassificationInput, ClassificationUpdate
 from app.services.llm import get_llm
 from app.utils.logger import get_logger
 
 logger = get_logger(__name__)
 
 
-async def classify_query(state: AgentState) -> dict:
-    """Classify the user query and set ``route`` and ``need_retrieval``."""
+async def classify_query(state: ClassificationInput) -> ClassificationUpdate:
+    """Read query/history and return only routing fields."""
     query = state["query"]
     history = state.get("chat_history", [])
     logger.info("Classifying query: %s", query[:80])
