@@ -47,6 +47,18 @@ class Settings(BaseSettings):
     # ── App ─────────────────────────────────────────────
     log_level: str = "INFO"
 
+    # ── Integration hardening ───────────────────────────
+    llm_timeout_seconds: float = 45.0
+    embedding_timeout_seconds: float = 30.0
+    reranker_timeout_seconds: float = 20.0
+    qdrant_timeout_seconds: float = 20.0
+    redis_socket_timeout_seconds: float = 5.0
+    siakad_timeout_seconds: float = 30.0
+
+    # Retries are only used for idempotent remote reads.
+    service_retry_attempts: int = 2
+    service_retry_backoff_seconds: float = 0.3
+
 
 @lru_cache
 def get_settings() -> Settings:

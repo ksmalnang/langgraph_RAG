@@ -6,6 +6,7 @@ from langchain_core.messages import HumanMessage
 
 from app.agent.nodes.fetch import _scrape_nilaimhs
 from app.agent.state import AgentState
+from app.config import get_settings
 from app.services.llm import get_llm_cheap
 from app.services.siakad_session import get_siakad_cookies
 
@@ -88,15 +89,42 @@ async def fetch_nilai_semester(state: AgentState) -> dict[str, Any]:
             logger.warning("cookies not found")
             return {"nilai_semester_detail": None}
 
-        async with httpx.AsyncClient(cookies=cookies_dict) as client:
+        settings = get_settings()
+        async with httpx.AsyncClient(
+            cookies=cookies_dict,
+            timeout=settings.siakad_timeout_seconds,
+        ) as client:
             result = await _scrape_nilaimhs(client, periode=computed_periode)
             nilai_semester_detail = result["nilai_semester"]
             logger.info(f"Successfully fetched nilai for periode {computed_periode}, total MK: {nilai_semester_detail['total_mata_kuliah']}")
             return {"nilai_semester_detail": nilai_semester_detail}
 
     except ConnectionError as e:
-        logger.warning("[fetch_nilai_semester] Session expired: %s", e)
+        logger.warning(
+            "Dependency failure dependency=siakad operation=fetch_nilai_semester flow=student mode=auth session_id=%s detail=%s",
+            state.get("session_id"),
+            e,
+        )
+        return {"nilai_semester_detail": None}
+    except httpx.TimeoutException as e:
+        logger.warning(
+            "Dependency failure dependency=siakad operation=fetch_nilai_semester flow=student mode=timeout session_id=%s detail=%s",
+            state.get("session_id"),
+            e,
+        )
+        return {"nilai_semester_detail": None}
+    except httpx.TransportError as e:
+        logger.warning(
+            "Dependency failure dependency=siakad operation=fetch_nilai_semester flow=student mode=transport session_id=%s detail=%s",
+            state.get("session_id"),
+            e,
+        )
         return {"nilai_semester_detail": None}
     except Exception as e:
-        logger.error("[fetch_nilai_semester] Unexpected error: %s", e)
+        logger.error(
+            "Dependency failure dependency=siakad operation=fetch_nilai_semester flow=student mode=unexpected session_id=%s detail=%s",
+            state.get("session_id"),
+            e,
+            exc_info=True,
+        )
         return {"nilai_semester_detail": None}
