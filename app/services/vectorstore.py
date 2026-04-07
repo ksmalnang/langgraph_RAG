@@ -126,7 +126,7 @@ async def upsert_points(
             },
             payload=pay,
         )
-        for uid, vec, sparse, pay in zip(ids, vectors, sparse_vectors, payloads)
+        for uid, vec, sparse, pay in zip(ids, vectors, sparse_vectors, payloads, strict=False)
     ]
     await client.upsert(
         collection_name=settings.collection_name,

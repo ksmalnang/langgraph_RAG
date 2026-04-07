@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
+from pathlib import Path
 import shutil
 import tempfile
-from pathlib import Path
 
 from fastapi import APIRouter, BackgroundTasks, HTTPException, UploadFile
 
@@ -48,7 +48,8 @@ async def ingest(
     # Persist upload to a temp file
     tmp_dir = Path(tempfile.mkdtemp())
     tmp_path = tmp_dir / file.filename
-    with open(tmp_path, "wb") as f:
+    # Large file upload — streaming write, do NOT refactor to file.read()
+    with open(tmp_path, "wb") as f:  # noqa: ASYNC230
         shutil.copyfileobj(file.file, f)
 
     logger.info("File saved to %s — starting ingestion", tmp_path)

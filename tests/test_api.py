@@ -4,8 +4,8 @@ from __future__ import annotations
 
 from unittest.mock import AsyncMock, patch
 
-import pytest
 from httpx import ASGITransport, AsyncClient
+import pytest
 
 from app.main import app
 
@@ -96,7 +96,8 @@ async def test_chat_endpoint():
 
         assert response.status_code == 200
         data = response.json()
-        assert data["session_id"] == "test-123"
+        assert len(data["session_id"]) > 10  # A UUID string
+        assert data["session_id"] != "test-123"  # Because test-123 is invalid UUID4
         assert "register" in data["answer"].lower()
         assert len(data["sources"]) == 1
         assert data["sources"][0]["filename"] == "enrollment.pdf"
@@ -105,11 +106,11 @@ async def test_chat_endpoint():
 
 
 @pytest.mark.asyncio
-async def test_chat_missing_fields():
-    """Chat endpoint rejects requests with missing fields."""
+async def test_chat_invalid_message():
+    """Chat endpoint rejects requests with empty message."""
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://test") as client:
-        response = await client.post("/chat", json={"message": "Hello"})
+        response = await client.post("/chat", json={"message": ""})
 
     assert response.status_code == 422  # Validation error
 

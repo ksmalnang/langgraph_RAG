@@ -39,7 +39,7 @@ def _extract_page(rc) -> int | None:
                     if hasattr(prov, "page_no") and prov.page_no is not None:
                         pages.append(prov.page_no)
         return min(pages) if pages else None
-    except Exception:  # noqa: BLE001 — defensive; never fail the pipeline
+    except Exception:
         return None
 
 

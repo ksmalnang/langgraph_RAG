@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from fastapi import FastAPI, Request
+from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 
 from app.schemas import ErrorResponse
@@ -68,6 +69,33 @@ def register_exception_handlers(app: FastAPI) -> None:
             status_code=exc.status_code,
             content=body.model_dump(),
         )
+
+    @app.exception_handler(RequestValidationError)
+    async def handle_validation_error(
+        _request: Request, exc: RequestValidationError
+    ) -> JSONResponse:
+        logger.warning("Validation error: %s", exc.errors())
+        err = exc.errors()[0]
+        loc = err.get("loc", [])
+        err_type = err.get("type", "")
+
+        field = loc[-1] if loc else ""
+        custom_msg = "Format input tidak valid."
+
+        if field == "message":
+            if err_type in ("string_too_short", "value_error", "missing"):
+                custom_msg = "Pesan tidak boleh kosong."
+            elif err_type == "string_too_long":
+                custom_msg = "Pesan maksimal 1000 karakter."
+        elif field == "email":
+            custom_msg = "Format email tidak valid."
+        elif field == "password":
+            if err_type in ("string_too_short", "missing"):
+                custom_msg = "Password minimal 6 karakter."
+            elif err_type == "string_too_long":
+                custom_msg = "Password maksimal 128 karakter."
+
+        return JSONResponse(status_code=422, content={"detail": custom_msg})
 
     @app.exception_handler(Exception)
     async def handle_unexpected(_request: Request, exc: Exception) -> JSONResponse:

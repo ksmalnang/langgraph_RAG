@@ -5,6 +5,9 @@ description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
+    "alembic>=1.18.4",
+    "asyncpg>=0.31.0",
+    "bs4>=0.0.2",
     "docling>=2.75.0",
     "fastapi>=0.135.1",
     "fastembed>=0.7.4",
@@ -15,10 +18,12 @@ dependencies = [
     "langchain-openai>=1.1.10",
     "langgraph>=1.0.10",
     "pydantic-settings>=2.13.1",
+    "pydantic[email]>=2.12.5",
     "python-dotenv>=1.2.2",
     "python-multipart>=0.0.22",
     "qdrant-client>=1.17.0",
     "redis[hiredis]>=7.2.1",
+    "sqlalchemy>=2.0.48",
     "uvicorn[standard]>=0.41.0",
 ]
 
@@ -27,4 +32,166 @@ dev = [
     "httpx>=0.28.1",
     "pytest>=9.0.2",
     "pytest-asyncio>=1.3.0",
+    "ruff>=0.9.0",
 ]
+
+# ---------------------------------------------------------------------------
+# Ruff
+# ---------------------------------------------------------------------------
+
+[tool.ruff]
+target-version = "py313"
+line-length = 88
+# Only lint relevant source folders, skip notebooks, docs, loose root scripts
+include = ["app/**/*.py", "tests/**/*.py"]
+exclude = [
+    ".git",
+    ".venv",
+    "__pycache__",
+    "notebooks/",        # .ipynb not linted by default but exclude the folder
+    "docs/",
+    "generate_structure.py",  # root utility script, not part of the app
+    "main.py",                # root entrypoint, often just app.run()
+]
+
+[tool.ruff.lint]
+select = [
+  "E",      # pycodestyle errors
+  "W",      # pycodestyle warnings
+  "F",      # Pyflakes
+  "I",      # isort
+  "B",      # flake8-bugbear
+  "C4",     # flake8-comprehensions
+  "UP",     # pyupgrade — py3.13 syntax modernisation
+  "N",      # pep8-naming
+  "SIM",    # flake8-simplify
+  "TID",    # tidy imports
+  "RUF",    # Ruff-native rules
+  "PT",     # pytest-style
+  "ASYNC",  # async best practices — asyncpg + redis + httpx all async
+  "LOG",    # logging best practices — you have app/utils/logger.py
+  "G",      # flake8-logging-format — pairs with LOG
+]
+
+ignore = [
+  "E501",    # line length — formatter handles it
+  "B008",    # Depends(), Query(), Body() etc. as default args — FastAPI pattern
+  "B904",    # raise without from — intentional in HTTP exception handlers
+  "N803",    # lowercase args — embeddings/reranker code uses X, y
+  "N806",    # lowercase vars — same
+  "RUF012",  # mutable class attrs — Pydantic/SQLAlchemy models use this
+  "SIM108",  # ternary instead of if-else — hurts readability in graph nodes
+  "G004",    # f-string in logging — common pattern, not worth enforcing
+]
+
+unfixable = [
+  "F841",  # unused vars — could be WIP graph state, don't auto-delete
+  "B",     # bugbear fixes can be destructive, review manually
+]
+
+[tool.ruff.lint.per-file-ignores]
+
+# --- Entrypoints ---
+"app/main.py" = ["E402"]          # lifespan/middleware registration order matters
+
+# --- Agent: graph + state ---
+# LangGraph graphs and state dicts are complex by design
+"app/agent/graph.py"  = ["C901", "PLR0912", "PLR0915"]
+"app/agent/state.py"  = ["RUF012"]   # TypedDict / dataclass patterns with mutable defaults
+
+# --- Agent: nodes ---
+# Each node can branch heavily; complexity checks create noise here
+"app/agent/nodes/*.py" = [
+  "C901",     # too complex
+  "PLR0912",  # too many branches
+  "PLR0915",  # too many statements
+  "N803",     # ML-style arg names (X, y, etc.)
+]
+
+# --- Agent: prompts ---
+# Prompt strings are intentionally long — never wrap them
+"app/agent/prompts.py" = ["E501"]
+
+# --- API routes ---
+# FastAPI routers use Depends() everywhere; B008 already globally ignored
+# but keep naming relaxed for route handler param names
+"app/api/*.py" = ["N802"]
+
+# --- Ingestion pipeline ---
+# Chunker/parser/upserter deal with raw data; some complexity is expected
+"app/ingestion/pipeline.py" = ["C901", "PLR0912"]
+"app/ingestion/chunker.py"  = ["C901"]
+"app/ingestion/parser.py"   = ["C901"]
+
+# --- Services ---
+# Embedding/reranker services use ML-style naming conventions
+"app/services/embeddings.py" = ["N803", "N806"]
+"app/services/reranker.py"   = ["N803", "N806"]
+# SIAKAD session likely does some unconventional HTTP stuff
+"app/services/siakad_session.py" = ["S101", "B", "SIM"]
+
+# --- Utils ---
+"app/utils/exceptions.py" = ["N818"]  # Exception names don't always end in Error
+"app/utils/logger.py"     = ["LOG015"] # Root logger usage may be intentional here
+
+# --- Tests ---
+"tests/*.py" = [
+  "S101",   # assert is fine
+  "PT011",  # broad pytest.raises ok
+  "N",      # relaxed naming for test helpers & fixtures
+  "ANN",    # no annotations needed in tests
+  "SIM",    # test clarity > brevity
+  "ASYNC",  # test async patterns differ from app code
+]
+
+[tool.ruff.lint.isort]
+known-first-party = ["app"]
+known-third-party = [
+  # Web
+  "fastapi", "uvicorn", "httpx", "starlette",
+  # Pydantic / settings
+  "pydantic", "pydantic_settings",
+  # LangChain / LangGraph
+  "langchain_core", "langchain_openai", "langgraph",
+  # Embeddings / ML
+  "fastembed", "FlagEmbedding", "huggingface_hub",
+  # Vector store
+  "qdrant_client",
+  # Document processing
+  "docling", "bs4",
+  # DB / cache
+  "sqlalchemy", "alembic", "asyncpg", "redis",
+  # Stdlib async
+  "anyio",
+]
+force-sort-within-sections = true
+split-on-trailing-comma = true
+
+[tool.ruff.lint.flake8-bugbear]
+extend-immutable-calls = [
+  "fastapi.Depends",
+  "fastapi.Security",
+  "fastapi.Query",
+  "fastapi.Path",
+  "fastapi.Body",
+  "fastapi.Header",
+  "fastapi.Cookie",
+  "fastapi.File",
+  "fastapi.Form",
+]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+skip-magic-trailing-comma = false
+line-ending = "auto"
+docstring-code-format = true
+
+# ---------------------------------------------------------------------------
+# Pytest
+# ---------------------------------------------------------------------------
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "session"
+testpaths = ["tests"]

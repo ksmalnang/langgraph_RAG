@@ -33,7 +33,7 @@ async def test_classify_query_retrieval():
     from app.agent.nodes.classify import classify_query
 
     mock_response = AsyncMock()
-    mock_response.content = "retrieval"
+    mock_response.content = '{"route": "retrieval_only", "reason": "Ask about process"}'
 
     with patch("app.agent.nodes.classify.get_llm") as mock_llm:
         mock_instance = AsyncMock()
@@ -51,7 +51,7 @@ async def test_classify_query_fallback():
     from app.agent.nodes.classify import classify_query
 
     mock_response = AsyncMock()
-    mock_response.content = "fallback"
+    mock_response.content = '{"route": "fallback", "reason": "Just greeting"}'
 
     with patch("app.agent.nodes.classify.get_llm") as mock_llm:
         mock_instance = AsyncMock()
@@ -168,5 +168,5 @@ async def test_generate_answer_uses_history():
     # Verify that the system message contains the formatted history
     system_message = call_args[0]
     assert system_message.type == "system"
-    assert "user: Hello" in system_message.content
-    assert "assistant: Hi there!" in system_message.content
+    assert "User: Hello" in system_message.content
+    assert "Assistant: Hi there!" in system_message.content

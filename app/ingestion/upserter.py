@@ -70,7 +70,7 @@ async def upsert_chunks(
                 "headings": c.headings,
                 "page": c.page,
             }
-            for c, enriched in zip(batch, enriched_texts)
+            for c, enriched in zip(batch, enriched_texts, strict=False)
         ]
 
         await vs.upsert_points(ids=ids, vectors=vectors, payloads=payloads)

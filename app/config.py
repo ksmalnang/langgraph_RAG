@@ -37,7 +37,7 @@ class Settings(BaseSettings):
     retrieval_top_k: int = 10
     rerank_top_n: int = 5
     hybrid_prefetch_limit: int = 20
-    relevance_threshold: float = 0.20
+    relevance_threshold: float = 0.17
     max_rewrite_count: int = 2
     filter_negative_scores: bool = True
 

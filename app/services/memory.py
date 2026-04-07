@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
+from datetime import UTC, datetime
 import json
-from datetime import datetime, timezone
 
 import redis.asyncio as aioredis
 
@@ -57,7 +57,7 @@ async def save_turn(
     r = await get_redis()
     history = await get_history(session_id)
 
-    now = datetime.now(timezone.utc).isoformat()
+    now = datetime.now(UTC).isoformat()
     history.append({"role": "user", "content": user_message, "timestamp": now})
     history.append(
         {"role": "assistant", "content": assistant_message, "timestamp": now}

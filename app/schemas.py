@@ -2,8 +2,7 @@
 
 from __future__ import annotations
 
-from pydantic import BaseModel, Field
-
+from pydantic import BaseModel, Field, field_validator
 
 # ── Shared / Base ────────────────────────────────────────
 
@@ -19,8 +18,20 @@ class ErrorResponse(BaseModel):
 
 
 class ChatRequest(BaseModel):
-    session_id: str = Field(..., min_length=1, description="Unique session identifier")
-    message: str = Field(..., min_length=1, description="User message text")
+    session_id: str | None = Field(
+        default=None, description="Unique session identifier (generated if omitted)"
+    )
+    message: str = Field(
+        ..., min_length=1, max_length=1000, description="User message text"
+    )
+
+    @field_validator("message")
+    @classmethod
+    def check_message_not_empty(cls, v: str) -> str:
+        s = v.strip()
+        if not s:
+            raise ValueError("Pesan tidak boleh kosong.")
+        return s
 
 
 class SourceChunk(BaseModel):

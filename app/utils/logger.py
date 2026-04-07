@@ -2,7 +2,6 @@
 
 import logging
 import sys
-from typing import Dict, Optional
 
 from app.config import get_settings
 
@@ -22,8 +21,8 @@ class ColoredFormatter(logging.Formatter):
 
     def __init__(
         self,
-        fmt: Optional[str] = None,
-        datefmt: Optional[str] = None,
+        fmt: str | None = None,
+        datefmt: str | None = None,
         use_colors: bool = True,
     ):
         super().__init__(fmt, datefmt)

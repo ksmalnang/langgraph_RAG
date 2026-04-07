@@ -26,10 +26,10 @@ def get_llm_cheap(temperature: float = 0.1) -> ChatOpenAI:
     """Return a ChatOpenAI instance pointed at OpenRouter."""
     settings = get_settings()
     return ChatOpenAI(
-        model="qwen/qwen3-235b-a22b-thinking-2507",
+        model="stepfun/step-3.5-flash:free",
         openai_api_key=settings.openrouter_api_key,
         openai_api_base=settings.openrouter_base_url,
         temperature=temperature,
         max_tokens=2048,
-        extra_body={"provider": {"only": ["alibaba"]}},
+        extra_body={"provider": {"only": ["stepfun/fp8"]}},
     )

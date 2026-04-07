@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from functools import lru_cache
+import uuid
 
 from fastapi import APIRouter, HTTPException
 
@@ -20,6 +21,20 @@ logger = get_logger(__name__)
 router = APIRouter(tags=["chat"])
 
 
+def resolve_session_id(session_id: str | None) -> tuple[str, bool]:
+    """
+    Return (session_id, is_authenticated).
+    is_authenticated = True kalau session_id UUID4 valid dari client.
+    """
+    if session_id is None:
+        return str(uuid.uuid4()), False
+    try:
+        uuid.UUID(session_id, version=4)
+        return session_id, True
+    except ValueError:
+        return str(uuid.uuid4()), False
+
+
 @lru_cache
 def _get_graph():
     """Lazily build and cache the compiled graph."""
@@ -31,15 +46,18 @@ def _get_graph():
 @router.post("/chat", response_model=ChatResponse)
 async def chat(request: ChatRequest) -> ChatResponse:
     """Process a chat message through the LangGraph agent."""
+    session_id, is_authenticated = resolve_session_id(request.session_id)
+
     logger.info(
-        "Chat request: session=%s, message=%s",
-        request.session_id,
+        "Chat request: session=%s, auth=%s, message=%s",
+        session_id,
+        is_authenticated,
         request.message[:80],
     )
 
     initial_state = {
         "query": request.message,
-        "session_id": request.session_id,
+        "session_id": session_id,
         "chat_history": [],
         "need_retrieval": False,
         "documents": [],
@@ -65,7 +83,7 @@ async def chat(request: ChatRequest) -> ChatResponse:
     source_chunks = [SourceChunk(**s) for s in raw_sources if isinstance(s, dict)]
 
     return ChatResponse(
-        session_id=request.session_id,
+        session_id=session_id,
         answer=result.get("answer", "Sorry, I couldn't generate an answer."),
         sources=source_chunks,
     )

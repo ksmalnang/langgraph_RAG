@@ -2,8 +2,11 @@
 
 from __future__ import annotations
 
+import json
+
 from langchain_core.messages import HumanMessage, SystemMessage
 
+from app.agent.nodes.generate import _format_history
 from app.agent.prompts import CLASSIFY_SYSTEM_PROMPT
 from app.agent.state import AgentState
 from app.services.llm import get_llm
@@ -13,22 +16,55 @@ logger = get_logger(__name__)
 
 
 async def classify_query(state: AgentState) -> dict:
-    """Classify the user query and set ``need_retrieval``."""
+    """Classify the user query and set ``route`` and ``need_retrieval``."""
     query = state["query"]
+    history = state.get("chat_history", [])
     logger.info("Classifying query: %s", query[:80])
+
+    history_str = _format_history(history)
+    system_prompt = CLASSIFY_SYSTEM_PROMPT.format(chat_history=history_str)
 
     llm = get_llm(temperature=0.0)
     messages = [
-        SystemMessage(content=CLASSIFY_SYSTEM_PROMPT),
+        SystemMessage(content=system_prompt),
         HumanMessage(content=query),
     ]
 
     response = await llm.ainvoke(messages)
-    classification = response.content.strip().lower()
+    content = response.content.strip()
 
-    need_retrieval = "retrieval" in classification
-    logger.info(
-        "Classification: %s → need_retrieval=%s", classification, need_retrieval
+    route = "fallback"
+    reason = "Parsing failed"
+    try:
+        # Safely parse codeblocks if LLM wraps JSON response
+        if content.startswith("```json"):
+            content = content[7:-3].strip()
+        elif content.startswith("```"):
+            content = content[3:-3].strip()
+
+        data = json.loads(content)
+        route = data.get("route", "fallback")
+        reason = data.get("reason", "No reason provided")
+
+        if route not in (
+            "fallback",
+            "retrieval_only",
+            "student_only",
+            "both",
+            "nilai_semester",
+        ):
+            logger.warning("Invalid route returned by LLM: %s", route)
+            route = "fallback"
+
+    except Exception as e:
+        logger.warning("JSON parse error for classification: %s", e)
+
+    need_retrieval = route in ("retrieval_only", "both")
+    logger.debug(
+        "Classification result: route=%s, need_retrieval=%s, reason=%s",
+        route,
+        need_retrieval,
+        reason,
     )
 
-    return {"need_retrieval": need_retrieval}
+    return {"route": route, "need_retrieval": need_retrieval}
