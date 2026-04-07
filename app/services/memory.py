@@ -10,6 +10,7 @@ import redis.asyncio as aioredis
 from app.config import get_settings
 from app.utils.exceptions import MemoryStoreError
 from app.utils.logger import get_logger
+from app.utils.security import mask_session_id
 
 logger = get_logger(__name__)
 
@@ -48,14 +49,18 @@ async def get_history(session_id: str) -> list[dict[str, str]]:
     except Exception as exc:
         logger.error(
             "Dependency failure dependency=redis operation=get_history session_id=%s mode=unexpected",
-            session_id,
+            mask_session_id(session_id),
             exc_info=True,
         )
         raise MemoryStoreError("Failed to load chat history") from exc
     if raw is None:
         return []
     history: list[dict[str, str]] = json.loads(raw)
-    logger.debug("Loaded %d turns for session %s", len(history), session_id)
+    logger.debug(
+        "Loaded %d turns for session %s",
+        len(history),
+        mask_session_id(session_id),
+    )
     return history
 
 
@@ -74,7 +79,7 @@ async def save_turn(
     except Exception as exc:
         logger.error(
             "Dependency failure dependency=redis operation=save_turn_precheck session_id=%s mode=unexpected",
-            session_id,
+            mask_session_id(session_id),
             exc_info=True,
         )
         raise MemoryStoreError("Failed to prepare chat history write") from exc
@@ -94,11 +99,15 @@ async def save_turn(
     except Exception as exc:
         logger.error(
             "Dependency failure dependency=redis operation=save_turn session_id=%s mode=unexpected",
-            session_id,
+            mask_session_id(session_id),
             exc_info=True,
         )
         raise MemoryStoreError("Failed to persist chat history") from exc
-    logger.debug("Saved turn for session %s (total=%d)", session_id, len(history))
+    logger.debug(
+        "Saved turn for session %s (total=%d)",
+        mask_session_id(session_id),
+        len(history),
+    )
 
 
 async def clear_session(session_id: str) -> None:
@@ -109,11 +118,11 @@ async def clear_session(session_id: str) -> None:
     except Exception as exc:
         logger.error(
             "Dependency failure dependency=redis operation=clear_session session_id=%s mode=unexpected",
-            session_id,
+            mask_session_id(session_id),
             exc_info=True,
         )
         raise MemoryStoreError("Failed to clear chat history") from exc
-    logger.info("Cleared session %s", session_id)
+    logger.info("Cleared session %s", mask_session_id(session_id))
 
 
 async def close_redis() -> None:

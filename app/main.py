@@ -12,8 +12,10 @@ from app.api.auth import router as auth_router
 from app.api.chat import router as chat_router
 from app.api.health import router as health_router
 from app.api.ingest import router as ingest_router
+from app.config import get_settings
 from app.utils.exceptions import register_exception_handlers
 from app.utils.logger import get_logger, setup_logging
+from app.utils.security import is_local_env, parse_cors_origins
 
 
 @asynccontextmanager
@@ -44,9 +46,21 @@ app = FastAPI(
 
 # ── Middleware ───────────────────────────────────────────
 
+settings = get_settings()
+cors_origins = parse_cors_origins(settings.cors_allow_origins)
+
+if not cors_origins and is_local_env(settings.app_env):
+    cors_origins = [
+        "http://localhost:3000",
+        "http://127.0.0.1:3000",
+    ]
+
+if "*" in cors_origins and not is_local_env(settings.app_env):
+    raise RuntimeError("Wildcard CORS is not allowed outside local development.")
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=cors_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

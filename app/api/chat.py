@@ -5,8 +5,14 @@ from __future__ import annotations
 from functools import lru_cache
 import uuid
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Header, HTTPException, Request
 
+from app.config import get_settings
+from app.services.rate_limiter import allow_request
+from app.services.siakad_session import (
+    has_student_access_binding,
+    verify_student_access_token,
+)
 from app.schemas import (
     ChatHistoryItem,
     ChatHistoryResponse,
@@ -16,6 +22,7 @@ from app.schemas import (
 )
 from app.utils.exceptions import AppError
 from app.utils.logger import get_logger
+from app.utils.security import mask_session_id
 
 logger = get_logger(__name__)
 
@@ -45,15 +52,41 @@ def _get_graph():
 
 
 @router.post("/chat", response_model=ChatResponse)
-async def chat(request: ChatRequest) -> ChatResponse:
+async def chat(
+    request: ChatRequest,
+    http_request: Request,
+    x_student_access_token: str | None = Header(
+        default=None,
+        alias="X-Student-Access-Token",
+    ),
+) -> ChatResponse:
     """Process a chat message through the LangGraph agent."""
+    settings = get_settings()
+    client_ip = http_request.client.host if http_request.client else "unknown"
+    if not allow_request(
+        key=f"chat:{client_ip}",
+        limit=settings.chat_rate_limit,
+        window_seconds=settings.rate_limit_window_seconds,
+    ):
+        raise HTTPException(status_code=429, detail="Too many chat requests.")
+
     session_id, is_authenticated = resolve_session_id(request.session_id)
+    session_hint = mask_session_id(session_id)
+
+    if is_authenticated and await has_student_access_binding(session_id):
+        valid = await verify_student_access_token(session_id, x_student_access_token)
+        if not valid:
+            logger.warning("Student token verification failed for session=%s", session_hint)
+            raise HTTPException(
+                status_code=401,
+                detail="Student access token is required for this session.",
+            )
 
     logger.info(
-        "Chat request: session=%s, auth=%s, message=%s",
-        session_id,
+        "Chat request: session=%s, auth=%s, message_length=%d",
+        session_hint,
         is_authenticated,
-        request.message[:80],
+        len(request.message),
     )
 
     initial_state = {
@@ -93,9 +126,23 @@ async def chat(request: ChatRequest) -> ChatResponse:
 
 
 @router.get("/chat/{session_id}/history", response_model=ChatHistoryResponse)
-async def get_chat_history(session_id: str) -> ChatHistoryResponse:
+async def get_chat_history(
+    session_id: str,
+    x_student_access_token: str | None = Header(
+        default=None,
+        alias="X-Student-Access-Token",
+    ),
+) -> ChatHistoryResponse:
     """Retrieve chat history for a session from Redis."""
     from app.services.memory import get_history
+
+    if await has_student_access_binding(session_id):
+        valid = await verify_student_access_token(session_id, x_student_access_token)
+        if not valid:
+            raise HTTPException(
+                status_code=401,
+                detail="Student access token is required for this session.",
+            )
 
     history = await get_history(session_id)
 

@@ -1,7 +1,10 @@
 """SIAKAD Session Management with Redis."""
 
+import hashlib
+import hmac
 import json
 import logging
+import secrets
 
 from bs4 import BeautifulSoup
 import httpx
@@ -10,6 +13,7 @@ from app.config import get_settings
 from app.services.resilience import retry_async
 from app.services.memory import get_redis
 from app.utils.exceptions import MemoryStoreError, SiakadAuthError
+from app.utils.security import mask_session_id
 
 logger = logging.getLogger(__name__)
 
@@ -26,6 +30,16 @@ HEADERS_BASE = {
         "Chrome/120.0.0.0 Safari/537.36"
     )
 }
+
+AUTH_TTL_SECONDS = 3600
+
+
+def _auth_key(session_id: str) -> str:
+    return f"siakad_auth:{session_id}"
+
+
+def _hash_access_token(token: str) -> str:
+    return hashlib.sha256(token.encode()).hexdigest()
 
 
 async def _login(client: httpx.AsyncClient, email: str, password: str) -> None:
@@ -131,30 +145,69 @@ async def init_siakad_session(session_id: str, email: str, password: str) -> boo
 
             r = await get_redis()
             redis_key = f"siakad_session:{session_id}"
-            await r.setex(redis_key, 3600, cookie_str)
-            logger.info("Session %s berhasil disimpan di Redis.", session_id)
+            await r.setex(redis_key, AUTH_TTL_SECONDS, cookie_str)
+            logger.info(
+                "Session %s berhasil disimpan di Redis.",
+                mask_session_id(session_id),
+            )
             return True
     except SiakadAuthError as exc:
         logger.warning(
             "Dependency failure dependency=siakad operation=init_session flow=student mode=auth session_id=%s detail=%s",
-            session_id,
+            mask_session_id(session_id),
             exc.message,
         )
         return False
     except MemoryStoreError as exc:
         logger.error(
             "Dependency failure dependency=redis operation=setex_siakad_session flow=student mode=cache_write session_id=%s detail=%s",
-            session_id,
+            mask_session_id(session_id),
             exc.message,
         )
         return False
     except Exception as exc:
         logger.error(
             "Dependency failure dependency=siakad operation=init_session flow=student mode=unexpected session_id=%s error=%s",
-            session_id,
+            mask_session_id(session_id),
             exc,
             exc_info=True,
         )
+        return False
+
+
+async def issue_student_access_token(session_id: str) -> str:
+    """Generate and store hashed student access token bound to session_id."""
+    token = secrets.token_urlsafe(32)
+    hashed = _hash_access_token(token)
+    try:
+        r = await get_redis()
+        await r.setex(_auth_key(session_id), AUTH_TTL_SECONDS, hashed)
+    except Exception as exc:
+        raise MemoryStoreError("Failed to persist student auth binding") from exc
+    return token
+
+
+async def has_student_access_binding(session_id: str) -> bool:
+    """Whether session_id is bound to an authenticated student session."""
+    try:
+        r = await get_redis()
+        return await r.exists(_auth_key(session_id)) == 1
+    except Exception:
+        return False
+
+
+async def verify_student_access_token(session_id: str, token: str | None) -> bool:
+    """Validate student token against stored hash for the given session."""
+    if not token:
+        return False
+    try:
+        r = await get_redis()
+        expected_hash = await r.get(_auth_key(session_id))
+        if not expected_hash:
+            return False
+        provided_hash = _hash_access_token(token)
+        return hmac.compare_digest(expected_hash, provided_hash)
+    except Exception:
         return False
 
 
@@ -170,7 +223,7 @@ async def get_siakad_cookies(session_id: str) -> dict | None:
     except Exception as exc:
         logger.warning(
             "Dependency failure dependency=redis operation=get_siakad_cookies flow=student mode=read session_id=%s error=%s",
-            session_id,
+            mask_session_id(session_id),
             exc,
         )
         return None
@@ -182,11 +235,16 @@ async def cache_student_data(session_id: str, student_data: dict) -> bool:
         r = await get_redis()
         redis_key = f"student_data:{session_id}"
         await r.setex(redis_key, 3600, json.dumps(student_data))
-        logger.debug("Berhasil cache student_data untuk session_id=%s", session_id)
+        logger.debug(
+            "Berhasil cache student_data untuk session_id=%s",
+            mask_session_id(session_id),
+        )
         return True
     except Exception as e:
         logger.warning(
-            "Redis unavailable saat set cache student_data untuk %s: %s", session_id, e
+            "Redis unavailable saat set cache student_data untuk %s: %s",
+            mask_session_id(session_id),
+            e,
         )
         return False
 
@@ -202,6 +260,8 @@ async def get_cached_student_data(session_id: str) -> dict | None:
         return None
     except Exception as e:
         logger.warning(
-            "Redis unavailable saat get cache student_data untuk %s: %s", session_id, e
+            "Redis unavailable saat get cache student_data untuk %s: %s",
+            mask_session_id(session_id),
+            e,
         )
         return None
