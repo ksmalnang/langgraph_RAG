@@ -37,7 +37,7 @@ async def login_siakad(request: LoginRequest, http_request: Request):
     settings = get_settings()
     client_ip = http_request.client.host if http_request.client else "unknown"
     limit_key = f"auth_login:{client_ip}"
-    if not allow_request(
+    if not await allow_request(
         key=limit_key,
         limit=settings.auth_login_rate_limit,
         window_seconds=settings.rate_limit_window_seconds,

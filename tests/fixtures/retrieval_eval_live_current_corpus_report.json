@@ -1,0 +1,1659 @@
+{
+  "dataset_id": "retrieval_eval_live_current_corpus.json",
+  "evaluation_date": "2026-04-08",
+  "corpus_id": "live-admin-kb",
+  "evaluation_mode": "live_services",
+  "retrieval_config": {
+    "k_eval": 5,
+    "retrieval_top_k": 10,
+    "rerank_top_n": 5,
+    "relevance_threshold": 0.17
+  },
+  "dependencies": {
+    "embedding_model": "qwen/qwen3-embedding-8b",
+    "reranker_model": "jina-reranker-v3"
+  },
+  "stages": {
+    "pre_rerank": {
+      "query_count": 12,
+      "k_eval": 5,
+      "metrics": {
+        "hit@1": 0.75,
+        "hit@3": 0.9167,
+        "hit@5": 1.0,
+        "mrr": 0.8542,
+        "recall@5": 1.0
+      },
+      "per_query": [
+        {
+          "name": "live_q01_handbook_exact_title",
+          "k_target": 1,
+          "rank": 1,
+          "hit@1": 1.0,
+          "hit@3": 1.0,
+          "hit@5": 1.0,
+          "mrr": 1.0,
+          "recall@5": 1.0
+        },
+        {
+          "name": "live_q02_handbook_admission",
+          "k_target": 3,
+          "rank": 1,
+          "hit@1": 1.0,
+          "hit@3": 1.0,
+          "hit@5": 1.0,
+          "mrr": 1.0,
+          "recall@5": 1.0
+        },
+        {
+          "name": "live_q03_handbook_akademik",
+          "k_target": 3,
+          "rank": 1,
+          "hit@1": 1.0,
+          "hit@3": 1.0,
+          "hit@5": 1.0,
+          "mrr": 1.0,
+          "recall@5": 1.0
+        },
+        {
+          "name": "live_q04_handbook_ukt",
+          "k_target": 5,
+          "rank": 1,
+          "hit@1": 1.0,
+          "hit@3": 1.0,
+          "hit@5": 1.0,
+          "mrr": 1.0,
+          "recall@5": 1.0
+        },
+        {
+          "name": "live_q05_student_guide_exact_title",
+          "k_target": 1,
+          "rank": 1,
+          "hit@1": 1.0,
+          "hit@3": 1.0,
+          "hit@5": 1.0,
+          "mrr": 1.0,
+          "recall@5": 1.0
+        },
+        {
+          "name": "live_q06_student_guide_rules",
+          "k_target": 3,
+          "rank": 1,
+          "hit@1": 1.0,
+          "hit@3": 1.0,
+          "hit@5": 1.0,
+          "mrr": 1.0,
+          "recall@5": 1.0
+        },
+        {
+          "name": "live_q07_student_guide_services",
+          "k_target": 5,
+          "rank": 4,
+          "hit@1": 0.0,
+          "hit@3": 0.0,
+          "hit@5": 1.0,
+          "mrr": 0.25,
+          "recall@5": 1.0
+        },
+        {
+          "name": "live_q08_student_guide_discipline",
+          "k_target": 5,
+          "rank": 2,
+          "hit@1": 0.0,
+          "hit@3": 1.0,
+          "hit@5": 1.0,
+          "mrr": 0.5,
+          "recall@5": 1.0
+        },
+        {
+          "name": "live_q09_curriculum_exact_title",
+          "k_target": 1,
+          "rank": 1,
+          "hit@1": 1.0,
+          "hit@3": 1.0,
+          "hit@5": 1.0,
+          "mrr": 1.0,
+          "recall@5": 1.0
+        },
+        {
+          "name": "live_q10_curriculum_structure",
+          "k_target": 3,
+          "rank": 1,
+          "hit@1": 1.0,
+          "hit@3": 1.0,
+          "hit@5": 1.0,
+          "mrr": 1.0,
+          "recall@5": 1.0
+        },
+        {
+          "name": "live_q11_curriculum_courses",
+          "k_target": 3,
+          "rank": 1,
+          "hit@1": 1.0,
+          "hit@3": 1.0,
+          "hit@5": 1.0,
+          "mrr": 1.0,
+          "recall@5": 1.0
+        },
+        {
+          "name": "live_q12_curriculum_sks",
+          "k_target": 5,
+          "rank": 2,
+          "hit@1": 0.0,
+          "hit@3": 1.0,
+          "hit@5": 1.0,
+          "mrr": 0.5,
+          "recall@5": 1.0
+        }
+      ]
+    },
+    "post_rerank": {
+      "query_count": 12,
+      "k_eval": 5,
+      "metrics": {
+        "hit@1": 0.6667,
+        "hit@3": 0.8333,
+        "hit@5": 1.0,
+        "mrr": 0.7833,
+        "recall@5": 1.0
+      },
+      "per_query": [
+        {
+          "name": "live_q01_handbook_exact_title",
+          "k_target": 1,
+          "rank": 1,
+          "hit@1": 1.0,
+          "hit@3": 1.0,
+          "hit@5": 1.0,
+          "mrr": 1.0,
+          "recall@5": 1.0
+        },
+        {
+          "name": "live_q02_handbook_admission",
+          "k_target": 3,
+          "rank": 1,
+          "hit@1": 1.0,
+          "hit@3": 1.0,
+          "hit@5": 1.0,
+          "mrr": 1.0,
+          "recall@5": 1.0
+        },
+        {
+          "name": "live_q03_handbook_akademik",
+          "k_target": 3,
+          "rank": 1,
+          "hit@1": 1.0,
+          "hit@3": 1.0,
+          "hit@5": 1.0,
+          "mrr": 1.0,
+          "recall@5": 1.0
+        },
+        {
+          "name": "live_q04_handbook_ukt",
+          "k_target": 5,
+          "rank": 1,
+          "hit@1": 1.0,
+          "hit@3": 1.0,
+          "hit@5": 1.0,
+          "mrr": 1.0,
+          "recall@5": 1.0
+        },
+        {
+          "name": "live_q05_student_guide_exact_title",
+          "k_target": 1,
+          "rank": 1,
+          "hit@1": 1.0,
+          "hit@3": 1.0,
+          "hit@5": 1.0,
+          "mrr": 1.0,
+          "recall@5": 1.0
+        },
+        {
+          "name": "live_q06_student_guide_rules",
+          "k_target": 3,
+          "rank": 1,
+          "hit@1": 1.0,
+          "hit@3": 1.0,
+          "hit@5": 1.0,
+          "mrr": 1.0,
+          "recall@5": 1.0
+        },
+        {
+          "name": "live_q07_student_guide_services",
+          "k_target": 5,
+          "rank": 5,
+          "hit@1": 0.0,
+          "hit@3": 0.0,
+          "hit@5": 1.0,
+          "mrr": 0.2,
+          "recall@5": 1.0
+        },
+        {
+          "name": "live_q08_student_guide_discipline",
+          "k_target": 5,
+          "rank": 2,
+          "hit@1": 0.0,
+          "hit@3": 1.0,
+          "hit@5": 1.0,
+          "mrr": 0.5,
+          "recall@5": 1.0
+        },
+        {
+          "name": "live_q09_curriculum_exact_title",
+          "k_target": 1,
+          "rank": 1,
+          "hit@1": 1.0,
+          "hit@3": 1.0,
+          "hit@5": 1.0,
+          "mrr": 1.0,
+          "recall@5": 1.0
+        },
+        {
+          "name": "live_q10_curriculum_structure",
+          "k_target": 3,
+          "rank": 2,
+          "hit@1": 0.0,
+          "hit@3": 1.0,
+          "hit@5": 1.0,
+          "mrr": 0.5,
+          "recall@5": 1.0
+        },
+        {
+          "name": "live_q11_curriculum_courses",
+          "k_target": 3,
+          "rank": 1,
+          "hit@1": 1.0,
+          "hit@3": 1.0,
+          "hit@5": 1.0,
+          "mrr": 1.0,
+          "recall@5": 1.0
+        },
+        {
+          "name": "live_q12_curriculum_sks",
+          "k_target": 5,
+          "rank": 5,
+          "hit@1": 0.0,
+          "hit@3": 0.0,
+          "hit@5": 1.0,
+          "mrr": 0.2,
+          "recall@5": 1.0
+        }
+      ]
+    }
+  },
+  "debug_candidates": {
+    "k_debug": 5,
+    "pre_rerank": {
+      "live_q01_handbook_exact_title": [
+        {
+          "id": "4d269808-1c3c-44a5-a299-498b0f9377d2",
+          "doc_id": "d6f577190fbc0a91",
+          "filename": "Wadek1-Buku Panduan Akademik FT Unpas 2023-2024 Publish.pdf",
+          "file_name": null,
+          "source": null,
+          "path": null,
+          "chunk_index": 0,
+          "score": 1.0,
+          "relevance_score": null
+        },
+        {
+          "id": "20998ca2-fc84-4b76-95e2-96a342ea7287",
+          "doc_id": "d6f577190fbc0a91",
+          "filename": "Wadek1-Buku Panduan Akademik FT Unpas 2023-2024 Publish.pdf",
+          "file_name": null,
+          "source": null,
+          "path": null,
+          "chunk_index": 1,
+          "score": 0.6666667,
+          "relevance_score": null
+        },
+        {
+          "id": "a9a60304-34a2-4a75-88d3-8c46b8d28e7b",
+          "doc_id": "1c6ceccf970f341b",
+          "filename": "Buku Pedoman Kemahasiswaan.pdf",
+          "file_name": null,
+          "source": null,
+          "path": null,
+          "chunk_index": 278,
+          "score": 0.4166667,
+          "relevance_score": null
+        },
+        {
+          "id": "c09915a4-27f2-43d7-8e73-c81c0a3fe796",
+          "doc_id": "d6f577190fbc0a91",
+          "filename": "Wadek1-Buku Panduan Akademik FT Unpas 2023-2024 Publish.pdf",
+          "file_name": null,
+          "source": null,
+          "path": null,
+          "chunk_index": 4,
+          "score": 0.34285715,
+          "relevance_score": null
+        },
+        {
+          "id": "0eeaf9c5-c5d9-4f28-a5c0-09463b6770d1",
+          "doc_id": "d6f577190fbc0a91",
+          "filename": "Wadek1-Buku Panduan Akademik FT Unpas 2023-2024 Publish.pdf",
+          "file_name": null,
+          "source": null,
+          "path": null,
+          "chunk_index": 64,
+          "score": 0.25555557,
+          "relevance_score": null
+        }
+      ],
+      "live_q02_handbook_admission": [
+        {
+          "id": "4d269808-1c3c-44a5-a299-498b0f9377d2",
+          "doc_id": "d6f577190fbc0a91",
+          "filename": "Wadek1-Buku Panduan Akademik FT Unpas 2023-2024 Publish.pdf",
+          "file_name": null,
+          "source": null,
+          "path": null,
+          "chunk_index": 0,
+          "score": 0.5,
+          "relevance_score": null
+        },
+        {
+          "id": "85fe24d0-d6d6-43e6-a1af-117da0d4f858",
+          "doc_id": "d6f577190fbc0a91",
+          "filename": "Wadek1-Buku Panduan Akademik FT Unpas 2023-2024 Publish.pdf",
+          "file_name": null,
+          "source": null,
+          "path": null,
+          "chunk_index": 287,
+          "score": 0.5,
+          "relevance_score": null
+        },
+        {
+          "id": "4095eac1-5599-4c54-ab00-a86f800f8177",
+          "doc_id": "d6f577190fbc0a91",
+          "filename": "Wadek1-Buku Panduan Akademik FT Unpas 2023-2024 Publish.pdf",
+          "file_name": null,
+          "source": null,
+          "path": null,
+          "chunk_index": 247,
+          "score": 0.33333334,
+          "relevance_score": null
+        },
+        {
+          "id": "4d89dda1-8234-41ab-96b6-ea811cdc0ed3",
+          "doc_id": "1c6ceccf970f341b",
+          "filename": "Buku Pedoman Kemahasiswaan.pdf",
+          "file_name": null,
+          "source": null,
+          "path": null,
+          "chunk_index": 0,
+          "score": 0.33333334,
+          "relevance_score": null
+        },
+        {
+          "id": "ff994b17-44d2-43b3-ae0e-5a51b5b4a85b",
+          "doc_id": "d6f577190fbc0a91",
+          "filename": "Wadek1-Buku Panduan Akademik FT Unpas 2023-2024 Publish.pdf",
+          "file_name": null,
+          "source": null,
+          "path": null,
+          "chunk_index": 288,
+          "score": 0.25,
+          "relevance_score": null
+        }
+      ],
+      "live_q03_handbook_akademik": [
+        {
+          "id": "20998ca2-fc84-4b76-95e2-96a342ea7287",
+          "doc_id": "d6f577190fbc0a91",
+          "filename": "Wadek1-Buku Panduan Akademik FT Unpas 2023-2024 Publish.pdf",
+          "file_name": null,
+          "source": null,
+          "path": null,
+          "chunk_index": 1,
+          "score": 0.64285713,
+          "relevance_score": null
+        },
+        {
+          "id": "4d269808-1c3c-44a5-a299-498b0f9377d2",
+          "doc_id": "d6f577190fbc0a91",
+          "filename": "Wadek1-Buku Panduan Akademik FT Unpas 2023-2024 Publish.pdf",
+          "file_name": null,
+          "source": null,
+          "path": null,
+          "chunk_index": 0,
+          "score": 0.5769231,
+          "relevance_score": null
+        },
+        {
+          "id": "4d89dda1-8234-41ab-96b6-ea811cdc0ed3",
+          "doc_id": "1c6ceccf970f341b",
+          "filename": "Buku Pedoman Kemahasiswaan.pdf",
+          "file_name": null,
+          "source": null,
+          "path": null,
+          "chunk_index": 0,
+          "score": 0.33333334,
+          "relevance_score": null
+        },
+        {
+          "id": "b65a57e4-2981-41a9-beb5-c08824451731",
+          "doc_id": "d6f577190fbc0a91",
+          "filename": "Wadek1-Buku Panduan Akademik FT Unpas 2023-2024 Publish.pdf",
+          "file_name": null,
+          "source": null,
+          "path": null,
+          "chunk_index": 13,
+          "score": 0.33333334,
+          "relevance_score": null
+        },
+        {
+          "id": "b7c18c56-8fca-4d35-b492-0bcfe8a1b116",
+          "doc_id": "d6f577190fbc0a91",
+          "filename": "Wadek1-Buku Panduan Akademik FT Unpas 2023-2024 Publish.pdf",
+          "file_name": null,
+          "source": null,
+          "path": null,
+          "chunk_index": 256,
+          "score": 0.33333334,
+          "relevance_score": null
+        }
+      ],
+      "live_q04_handbook_ukt": [
+        {
+          "id": "64d0f8f8-7c8e-4398-a8de-8a3e6d491d72",
+          "doc_id": "d6f577190fbc0a91",
+          "filename": "Wadek1-Buku Panduan Akademik FT Unpas 2023-2024 Publish.pdf",
+          "file_name": null,
+          "source": null,
+          "path": null,
+          "chunk_index": 227,
+          "score": 0.5,
+          "relevance_score": null
+        },
+        {
+          "id": "85fe24d0-d6d6-43e6-a1af-117da0d4f858",
+          "doc_id": "d6f577190fbc0a91",
+          "filename": "Wadek1-Buku Panduan Akademik FT Unpas 2023-2024 Publish.pdf",
+          "file_name": null,
+          "source": null,
+          "path": null,
+          "chunk_index": 287,
+          "score": 0.5,
+          "relevance_score": null
+        },
+        {
+          "id": "94cf2b32-c5e7-43cb-85b0-144eb74f4c57",
+          "doc_id": "d6f577190fbc0a91",
+          "filename": "Wadek1-Buku Panduan Akademik FT Unpas 2023-2024 Publish.pdf",
+          "file_name": null,
+          "source": null,
+          "path": null,
+          "chunk_index": 232,
+          "score": 0.3611111,
+          "relevance_score": null
+        },
+        {
+          "id": "4d89dda1-8234-41ab-96b6-ea811cdc0ed3",
+          "doc_id": "1c6ceccf970f341b",
+          "filename": "Buku Pedoman Kemahasiswaan.pdf",
+          "file_name": null,
+          "source": null,
+          "path": null,
+          "chunk_index": 0,
+          "score": 0.33333334,
+          "relevance_score": null
+        },
+        {
+          "id": "a3eddde5-41b7-4de7-adc4-2e41e28f140d",
+          "doc_id": "d6f577190fbc0a91",
+          "filename": "Wadek1-Buku Panduan Akademik FT Unpas 2023-2024 Publish.pdf",
+          "file_name": null,
+          "source": null,
+          "path": null,
+          "chunk_index": 325,
+          "score": 0.33333334,
+          "relevance_score": null
+        }
+      ],
+      "live_q05_student_guide_exact_title": [
+        {
+          "id": "a9a60304-34a2-4a75-88d3-8c46b8d28e7b",
+          "doc_id": "1c6ceccf970f341b",
+          "filename": "Buku Pedoman Kemahasiswaan.pdf",
+          "file_name": null,
+          "source": null,
+          "path": null,
+          "chunk_index": 278,
+          "score": 0.75,
+          "relevance_score": null
+        },
+        {
+          "id": "4d89dda1-8234-41ab-96b6-ea811cdc0ed3",
+          "doc_id": "1c6ceccf970f341b",
+          "filename": "Buku Pedoman Kemahasiswaan.pdf",
+          "file_name": null,
+          "source": null,
+          "path": null,
+          "chunk_index": 0,
+          "score": 0.5,
+          "relevance_score": null
+        },
+        {
+          "id": "ca49f97c-3524-415b-bac4-08569fa2c5ac",
+          "doc_id": "1c6ceccf970f341b",
+          "filename": "Buku Pedoman Kemahasiswaan.pdf",
+          "file_name": null,
+          "source": null,
+          "path": null,
+          "chunk_index": 2,
+          "score": 0.44444445,
+          "relevance_score": null
+        },
+        {
+          "id": "eaebf316-c7f5-4785-a8f4-9d0b5f39a035",
+          "doc_id": "1c6ceccf970f341b",
+          "filename": "Buku Pedoman Kemahasiswaan.pdf",
+          "file_name": null,
+          "source": null,
+          "path": null,
+          "chunk_index": 7,
+          "score": 0.33333334,
+          "relevance_score": null
+        },
+        {
+          "id": "0554655e-c72e-41d3-8c69-b01e03a2c096",
+          "doc_id": "1c6ceccf970f341b",
+          "filename": "Buku Pedoman Kemahasiswaan.pdf",
+          "file_name": null,
+          "source": null,
+          "path": null,
+          "chunk_index": 76,
+          "score": 0.25,
+          "relevance_score": null
+        }
+      ],
+      "live_q06_student_guide_rules": [
+        {
+          "id": "32ff1d8c-0b52-403f-b5c2-15225edc95e0",
+          "doc_id": "1c6ceccf970f341b",
+          "filename": "Buku Pedoman Kemahasiswaan.pdf",
+          "file_name": null,
+          "source": null,
+          "path": null,
+          "chunk_index": 339,
+          "score": 0.64285713,
+          "relevance_score": null
+        },
+        {
+          "id": "e9516a8d-b6c1-49ea-8f91-cc72315fc895",
+          "doc_id": "d6f577190fbc0a91",
+          "filename": "Wadek1-Buku Panduan Akademik FT Unpas 2023-2024 Publish.pdf",
+          "file_name": null,
+          "source": null,
+          "path": null,
+          "chunk_index": 52,
+          "score": 0.5,
+          "relevance_score": null
+        },
+        {
+          "id": "80e6af99-7a7b-4039-a1d2-112c5a30d654",
+          "doc_id": "1c6ceccf970f341b",
+          "filename": "Buku Pedoman Kemahasiswaan.pdf",
+          "file_name": null,
+          "source": null,
+          "path": null,
+          "chunk_index": 6,
+          "score": 0.4166667,
+          "relevance_score": null
+        },
+        {
+          "id": "eaebf316-c7f5-4785-a8f4-9d0b5f39a035",
+          "doc_id": "1c6ceccf970f341b",
+          "filename": "Buku Pedoman Kemahasiswaan.pdf",
+          "file_name": null,
+          "source": null,
+          "path": null,
+          "chunk_index": 7,
+          "score": 0.3809524,
+          "relevance_score": null
+        },
+        {
+          "id": "deb5f09d-23a7-45a6-9afd-13ba2a229432",
+          "doc_id": "1c6ceccf970f341b",
+          "filename": "Buku Pedoman Kemahasiswaan.pdf",
+          "file_name": null,
+          "source": null,
+          "path": null,
+          "chunk_index": 341,
+          "score": 0.33333334,
+          "relevance_score": null
+        }
+      ],
+      "live_q07_student_guide_services": [
+        {
+          "id": "3f6d2db3-95cb-413a-97d4-59b8f9f8753a",
+          "doc_id": "d6f577190fbc0a91",
+          "filename": "Wadek1-Buku Panduan Akademik FT Unpas 2023-2024 Publish.pdf",
+          "file_name": null,
+          "source": null,
+          "path": null,
+          "chunk_index": 58,
+          "score": 0.5555556,
+          "relevance_score": null
+        },
+        {
+          "id": "239e3cbd-63a3-46ce-bba4-87d1ab92485e",
+          "doc_id": "d6f577190fbc0a91",
+          "filename": "Wadek1-Buku Panduan Akademik FT Unpas 2023-2024 Publish.pdf",
+          "file_name": null,
+          "source": null,
+          "path": null,
+          "chunk_index": 315,
+          "score": 0.5,
+          "relevance_score": null
+        },
+        {
+          "id": "318b573c-e61c-4efc-88d7-d863995694df",
+          "doc_id": "d6f577190fbc0a91",
+          "filename": "Wadek1-Buku Panduan Akademik FT Unpas 2023-2024 Publish.pdf",
+          "file_name": null,
+          "source": null,
+          "path": null,
+          "chunk_index": 301,
+          "score": 0.33333334,
+          "relevance_score": null
+        },
+        {
+          "id": "4d89dda1-8234-41ab-96b6-ea811cdc0ed3",
+          "doc_id": "1c6ceccf970f341b",
+          "filename": "Buku Pedoman Kemahasiswaan.pdf",
+          "file_name": null,
+          "source": null,
+          "path": null,
+          "chunk_index": 0,
+          "score": 0.33333334,
+          "relevance_score": null
+        },
+        {
+          "id": "3eba663a-95f6-42c3-8f82-27080ca9cced",
+          "doc_id": "d6f577190fbc0a91",
+          "filename": "Wadek1-Buku Panduan Akademik FT Unpas 2023-2024 Publish.pdf",
+          "file_name": null,
+          "source": null,
+          "path": null,
+          "chunk_index": 323,
+          "score": 0.325,
+          "relevance_score": null
+        }
+      ],
+      "live_q08_student_guide_discipline": [
+        {
+          "id": "2fc9355e-c7a5-4314-bb95-7b855174f8c0",
+          "doc_id": "d6f577190fbc0a91",
+          "filename": "Wadek1-Buku Panduan Akademik FT Unpas 2023-2024 Publish.pdf",
+          "file_name": null,
+          "source": null,
+          "path": null,
+          "chunk_index": 275,
+          "score": 0.75,
+          "relevance_score": null
+        },
+        {
+          "id": "209d163a-a5b1-441a-a4cd-3c4baa26f398",
+          "doc_id": "1c6ceccf970f341b",
+          "filename": "Buku Pedoman Kemahasiswaan.pdf",
+          "file_name": null,
+          "source": null,
+          "path": null,
+          "chunk_index": 352,
+          "score": 0.75,
+          "relevance_score": null
+        },
+        {
+          "id": "c500230a-3abe-4590-947f-c35f45be5839",
+          "doc_id": "d6f577190fbc0a91",
+          "filename": "Wadek1-Buku Panduan Akademik FT Unpas 2023-2024 Publish.pdf",
+          "file_name": null,
+          "source": null,
+          "path": null,
+          "chunk_index": 269,
+          "score": 0.53333336,
+          "relevance_score": null
+        },
+        {
+          "id": "b7b3caf5-3753-4515-bc92-43df18f5bc54",
+          "doc_id": "1c6ceccf970f341b",
+          "filename": "Buku Pedoman Kemahasiswaan.pdf",
+          "file_name": null,
+          "source": null,
+          "path": null,
+          "chunk_index": 351,
+          "score": 0.45833334,
+          "relevance_score": null
+        },
+        {
+          "id": "32ff1d8c-0b52-403f-b5c2-15225edc95e0",
+          "doc_id": "1c6ceccf970f341b",
+          "filename": "Buku Pedoman Kemahasiswaan.pdf",
+          "file_name": null,
+          "source": null,
+          "path": null,
+          "chunk_index": 339,
+          "score": 0.3,
+          "relevance_score": null
+        }
+      ],
+      "live_q09_curriculum_exact_title": [
+        {
+          "id": "14eb3b8a-b8e4-4036-8a79-c1f5aa313388",
+          "doc_id": "d3a4d9c4e32bed73",
+          "filename": "Kurikulum Teknik Informatika Unpas 2021 (versi Publik - Tanpa RPS) (4).pdf",
+          "file_name": null,
+          "source": null,
+          "path": null,
+          "chunk_index": 13,
+          "score": 1.0,
+          "relevance_score": null
+        },
+        {
+          "id": "948c296e-d5bb-4be1-93e7-2bc9892fff0e",
+          "doc_id": "d6f577190fbc0a91",
+          "filename": "Wadek1-Buku Panduan Akademik FT Unpas 2023-2024 Publish.pdf",
+          "file_name": null,
+          "source": null,
+          "path": null,
+          "chunk_index": 130,
+          "score": 0.5833334,
+          "relevance_score": null
+        },
+        {
+          "id": "c288c456-3974-41ff-aa08-b942121c4dea",
+          "doc_id": "d3a4d9c4e32bed73",
+          "filename": "Kurikulum Teknik Informatika Unpas 2021 (versi Publik - Tanpa RPS) (4).pdf",
+          "file_name": null,
+          "source": null,
+          "path": null,
+          "chunk_index": 1,
+          "score": 0.53333336,
+          "relevance_score": null
+        },
+        {
+          "id": "050ade97-b85c-405f-9bd5-44668dcaa534",
+          "doc_id": "d3a4d9c4e32bed73",
+          "filename": "Kurikulum Teknik Informatika Unpas 2021 (versi Publik - Tanpa RPS) (4).pdf",
+          "file_name": null,
+          "source": null,
+          "path": null,
+          "chunk_index": 14,
+          "score": 0.45,
+          "relevance_score": null
+        },
+        {
+          "id": "ff994b17-44d2-43b3-ae0e-5a51b5b4a85b",
+          "doc_id": "d6f577190fbc0a91",
+          "filename": "Wadek1-Buku Panduan Akademik FT Unpas 2023-2024 Publish.pdf",
+          "file_name": null,
+          "source": null,
+          "path": null,
+          "chunk_index": 288,
+          "score": 0.16666667,
+          "relevance_score": null
+        }
+      ],
+      "live_q10_curriculum_structure": [
+        {
+          "id": "050ade97-b85c-405f-9bd5-44668dcaa534",
+          "doc_id": "d3a4d9c4e32bed73",
+          "filename": "Kurikulum Teknik Informatika Unpas 2021 (versi Publik - Tanpa RPS) (4).pdf",
+          "file_name": null,
+          "source": null,
+          "path": null,
+          "chunk_index": 14,
+          "score": 0.8333334,
+          "relevance_score": null
+        },
+        {
+          "id": "948c296e-d5bb-4be1-93e7-2bc9892fff0e",
+          "doc_id": "d6f577190fbc0a91",
+          "filename": "Wadek1-Buku Panduan Akademik FT Unpas 2023-2024 Publish.pdf",
+          "file_name": null,
+          "source": null,
+          "path": null,
+          "chunk_index": 130,
+          "score": 0.7,
+          "relevance_score": null
+        },
+        {
+          "id": "14eb3b8a-b8e4-4036-8a79-c1f5aa313388",
+          "doc_id": "d3a4d9c4e32bed73",
+          "filename": "Kurikulum Teknik Informatika Unpas 2021 (versi Publik - Tanpa RPS) (4).pdf",
+          "file_name": null,
+          "source": null,
+          "path": null,
+          "chunk_index": 13,
+          "score": 0.5833334,
+          "relevance_score": null
+        },
+        {
+          "id": "c288c456-3974-41ff-aa08-b942121c4dea",
+          "doc_id": "d3a4d9c4e32bed73",
+          "filename": "Kurikulum Teknik Informatika Unpas 2021 (versi Publik - Tanpa RPS) (4).pdf",
+          "file_name": null,
+          "source": null,
+          "path": null,
+          "chunk_index": 1,
+          "score": 0.33333334,
+          "relevance_score": null
+        },
+        {
+          "id": "3b263113-a437-43db-8c84-b24aba3f89e3",
+          "doc_id": "d3a4d9c4e32bed73",
+          "filename": "Kurikulum Teknik Informatika Unpas 2021 (versi Publik - Tanpa RPS) (4).pdf",
+          "file_name": null,
+          "source": null,
+          "path": null,
+          "chunk_index": 0,
+          "score": 0.25,
+          "relevance_score": null
+        }
+      ],
+      "live_q11_curriculum_courses": [
+        {
+          "id": "5fa6e959-e59d-4361-a5bc-f528d4d5f01d",
+          "doc_id": "d3a4d9c4e32bed73",
+          "filename": "Kurikulum Teknik Informatika Unpas 2021 (versi Publik - Tanpa RPS) (4).pdf",
+          "file_name": null,
+          "source": null,
+          "path": null,
+          "chunk_index": 189,
+          "score": 0.5833334,
+          "relevance_score": null
+        },
+        {
+          "id": "0fd66651-6e25-46a0-bbe9-83bd8906b20a",
+          "doc_id": "d3a4d9c4e32bed73",
+          "filename": "Kurikulum Teknik Informatika Unpas 2021 (versi Publik - Tanpa RPS) (4).pdf",
+          "file_name": null,
+          "source": null,
+          "path": null,
+          "chunk_index": 188,
+          "score": 0.5833333,
+          "relevance_score": null
+        },
+        {
+          "id": "050ade97-b85c-405f-9bd5-44668dcaa534",
+          "doc_id": "d3a4d9c4e32bed73",
+          "filename": "Kurikulum Teknik Informatika Unpas 2021 (versi Publik - Tanpa RPS) (4).pdf",
+          "file_name": null,
+          "source": null,
+          "path": null,
+          "chunk_index": 14,
+          "score": 0.5,
+          "relevance_score": null
+        },
+        {
+          "id": "6b763e71-40bb-414e-8670-0a20f20dfa13",
+          "doc_id": "d3a4d9c4e32bed73",
+          "filename": "Kurikulum Teknik Informatika Unpas 2021 (versi Publik - Tanpa RPS) (4).pdf",
+          "file_name": null,
+          "source": null,
+          "path": null,
+          "chunk_index": 126,
+          "score": 0.33333334,
+          "relevance_score": null
+        },
+        {
+          "id": "61fec60c-3fe5-43f4-bab5-02d87d54a57f",
+          "doc_id": "d3a4d9c4e32bed73",
+          "filename": "Kurikulum Teknik Informatika Unpas 2021 (versi Publik - Tanpa RPS) (4).pdf",
+          "file_name": null,
+          "source": null,
+          "path": null,
+          "chunk_index": 191,
+          "score": 0.325,
+          "relevance_score": null
+        }
+      ],
+      "live_q12_curriculum_sks": [
+        {
+          "id": "4d153558-a33f-4efb-965a-42082915544e",
+          "doc_id": "d6f577190fbc0a91",
+          "filename": "Wadek1-Buku Panduan Akademik FT Unpas 2023-2024 Publish.pdf",
+          "file_name": null,
+          "source": null,
+          "path": null,
+          "chunk_index": 164,
+          "score": 0.55263156,
+          "relevance_score": null
+        },
+        {
+          "id": "40ca7903-dd32-4979-b10f-bc6f312391af",
+          "doc_id": "d3a4d9c4e32bed73",
+          "filename": "Kurikulum Teknik Informatika Unpas 2021 (versi Publik - Tanpa RPS) (4).pdf",
+          "file_name": null,
+          "source": null,
+          "path": null,
+          "chunk_index": 120,
+          "score": 0.5,
+          "relevance_score": null
+        },
+        {
+          "id": "0fd66651-6e25-46a0-bbe9-83bd8906b20a",
+          "doc_id": "d3a4d9c4e32bed73",
+          "filename": "Kurikulum Teknik Informatika Unpas 2021 (versi Publik - Tanpa RPS) (4).pdf",
+          "file_name": null,
+          "source": null,
+          "path": null,
+          "chunk_index": 188,
+          "score": 0.33333334,
+          "relevance_score": null
+        },
+        {
+          "id": "85fe24d0-d6d6-43e6-a1af-117da0d4f858",
+          "doc_id": "d6f577190fbc0a91",
+          "filename": "Wadek1-Buku Panduan Akademik FT Unpas 2023-2024 Publish.pdf",
+          "file_name": null,
+          "source": null,
+          "path": null,
+          "chunk_index": 287,
+          "score": 0.33333334,
+          "relevance_score": null
+        },
+        {
+          "id": "82cb2770-d37e-4631-8f33-5ec5ae075c80",
+          "doc_id": "d6f577190fbc0a91",
+          "filename": "Wadek1-Buku Panduan Akademik FT Unpas 2023-2024 Publish.pdf",
+          "file_name": null,
+          "source": null,
+          "path": null,
+          "chunk_index": 183,
+          "score": 0.25,
+          "relevance_score": null
+        }
+      ]
+    },
+    "post_rerank": {
+      "live_q01_handbook_exact_title": [
+        {
+          "id": "4d269808-1c3c-44a5-a299-498b0f9377d2",
+          "doc_id": "d6f577190fbc0a91",
+          "filename": "Wadek1-Buku Panduan Akademik FT Unpas 2023-2024 Publish.pdf",
+          "file_name": null,
+          "source": null,
+          "path": null,
+          "chunk_index": 0,
+          "score": 1.0,
+          "relevance_score": 0.17618656
+        },
+        {
+          "id": "c09915a4-27f2-43d7-8e73-c81c0a3fe796",
+          "doc_id": "d6f577190fbc0a91",
+          "filename": "Wadek1-Buku Panduan Akademik FT Unpas 2023-2024 Publish.pdf",
+          "file_name": null,
+          "source": null,
+          "path": null,
+          "chunk_index": 4,
+          "score": 0.34285715,
+          "relevance_score": 0.14589085
+        },
+        {
+          "id": "20998ca2-fc84-4b76-95e2-96a342ea7287",
+          "doc_id": "d6f577190fbc0a91",
+          "filename": "Wadek1-Buku Panduan Akademik FT Unpas 2023-2024 Publish.pdf",
+          "file_name": null,
+          "source": null,
+          "path": null,
+          "chunk_index": 1,
+          "score": 0.6666667,
+          "relevance_score": 0.06632588
+        },
+        {
+          "id": "a9a60304-34a2-4a75-88d3-8c46b8d28e7b",
+          "doc_id": "1c6ceccf970f341b",
+          "filename": "Buku Pedoman Kemahasiswaan.pdf",
+          "file_name": null,
+          "source": null,
+          "path": null,
+          "chunk_index": 278,
+          "score": 0.4166667,
+          "relevance_score": 0.05360328
+        },
+        {
+          "id": "bb48587e-113c-420b-9aad-59877bce6532",
+          "doc_id": "d6f577190fbc0a91",
+          "filename": "Wadek1-Buku Panduan Akademik FT Unpas 2023-2024 Publish.pdf",
+          "file_name": null,
+          "source": null,
+          "path": null,
+          "chunk_index": 65,
+          "score": 0.25396827,
+          "relevance_score": 0.01063669
+        }
+      ],
+      "live_q02_handbook_admission": [
+        {
+          "id": "85fe24d0-d6d6-43e6-a1af-117da0d4f858",
+          "doc_id": "d6f577190fbc0a91",
+          "filename": "Wadek1-Buku Panduan Akademik FT Unpas 2023-2024 Publish.pdf",
+          "file_name": null,
+          "source": null,
+          "path": null,
+          "chunk_index": 287,
+          "score": 0.5,
+          "relevance_score": 0.17509504
+        },
+        {
+          "id": "4095eac1-5599-4c54-ab00-a86f800f8177",
+          "doc_id": "d6f577190fbc0a91",
+          "filename": "Wadek1-Buku Panduan Akademik FT Unpas 2023-2024 Publish.pdf",
+          "file_name": null,
+          "source": null,
+          "path": null,
+          "chunk_index": 247,
+          "score": 0.33333334,
+          "relevance_score": 0.16646862
+        },
+        {
+          "id": "0297203f-5fad-4996-aa7c-e752d0f26629",
+          "doc_id": "d6f577190fbc0a91",
+          "filename": "Wadek1-Buku Panduan Akademik FT Unpas 2023-2024 Publish.pdf",
+          "file_name": null,
+          "source": null,
+          "path": null,
+          "chunk_index": 73,
+          "score": 0.16783217,
+          "relevance_score": 0.08503242
+        },
+        {
+          "id": "4d269808-1c3c-44a5-a299-498b0f9377d2",
+          "doc_id": "d6f577190fbc0a91",
+          "filename": "Wadek1-Buku Panduan Akademik FT Unpas 2023-2024 Publish.pdf",
+          "file_name": null,
+          "source": null,
+          "path": null,
+          "chunk_index": 0,
+          "score": 0.5,
+          "relevance_score": 0.02423831
+        },
+        {
+          "id": "0eeaf9c5-c5d9-4f28-a5c0-09463b6770d1",
+          "doc_id": "d6f577190fbc0a91",
+          "filename": "Wadek1-Buku Panduan Akademik FT Unpas 2023-2024 Publish.pdf",
+          "file_name": null,
+          "source": null,
+          "path": null,
+          "chunk_index": 64,
+          "score": 0.19444445,
+          "relevance_score": 0.0163215
+        }
+      ],
+      "live_q03_handbook_akademik": [
+        {
+          "id": "b65a57e4-2981-41a9-beb5-c08824451731",
+          "doc_id": "d6f577190fbc0a91",
+          "filename": "Wadek1-Buku Panduan Akademik FT Unpas 2023-2024 Publish.pdf",
+          "file_name": null,
+          "source": null,
+          "path": null,
+          "chunk_index": 13,
+          "score": 0.33333334,
+          "relevance_score": 0.30702478
+        },
+        {
+          "id": "20998ca2-fc84-4b76-95e2-96a342ea7287",
+          "doc_id": "d6f577190fbc0a91",
+          "filename": "Wadek1-Buku Panduan Akademik FT Unpas 2023-2024 Publish.pdf",
+          "file_name": null,
+          "source": null,
+          "path": null,
+          "chunk_index": 1,
+          "score": 0.64285713,
+          "relevance_score": 0.26444292
+        },
+        {
+          "id": "0df83b6f-856e-41a3-8ae4-fd81e9b7bd1a",
+          "doc_id": "d6f577190fbc0a91",
+          "filename": "Wadek1-Buku Panduan Akademik FT Unpas 2023-2024 Publish.pdf",
+          "file_name": null,
+          "source": null,
+          "path": null,
+          "chunk_index": 89,
+          "score": 0.2,
+          "relevance_score": 0.20482111
+        },
+        {
+          "id": "b7c18c56-8fca-4d35-b492-0bcfe8a1b116",
+          "doc_id": "d6f577190fbc0a91",
+          "filename": "Wadek1-Buku Panduan Akademik FT Unpas 2023-2024 Publish.pdf",
+          "file_name": null,
+          "source": null,
+          "path": null,
+          "chunk_index": 256,
+          "score": 0.33333334,
+          "relevance_score": 0.17166179
+        },
+        {
+          "id": "7a02f1ab-4534-41ae-80dd-81dff04dfd7e",
+          "doc_id": "d6f577190fbc0a91",
+          "filename": "Wadek1-Buku Panduan Akademik FT Unpas 2023-2024 Publish.pdf",
+          "file_name": null,
+          "source": null,
+          "path": null,
+          "chunk_index": 12,
+          "score": 0.28333333,
+          "relevance_score": 0.16033363
+        }
+      ],
+      "live_q04_handbook_ukt": [
+        {
+          "id": "fb460064-0ecb-466c-833e-bb3006f0e577",
+          "doc_id": "d6f577190fbc0a91",
+          "filename": "Wadek1-Buku Panduan Akademik FT Unpas 2023-2024 Publish.pdf",
+          "file_name": null,
+          "source": null,
+          "path": null,
+          "chunk_index": 347,
+          "score": 0.16666667,
+          "relevance_score": 0.09063089
+        },
+        {
+          "id": "a6279632-ed89-4c05-8187-8dd5b65aa015",
+          "doc_id": "d6f577190fbc0a91",
+          "filename": "Wadek1-Buku Panduan Akademik FT Unpas 2023-2024 Publish.pdf",
+          "file_name": null,
+          "source": null,
+          "path": null,
+          "chunk_index": 230,
+          "score": 0.2,
+          "relevance_score": 0.05359501
+        },
+        {
+          "id": "f31488bd-886c-4c74-aa53-b13d4c0713bf",
+          "doc_id": "d6f577190fbc0a91",
+          "filename": "Wadek1-Buku Panduan Akademik FT Unpas 2023-2024 Publish.pdf",
+          "file_name": null,
+          "source": null,
+          "path": null,
+          "chunk_index": 226,
+          "score": 0.30555555,
+          "relevance_score": 0.0520901
+        },
+        {
+          "id": "64d0f8f8-7c8e-4398-a8de-8a3e6d491d72",
+          "doc_id": "d6f577190fbc0a91",
+          "filename": "Wadek1-Buku Panduan Akademik FT Unpas 2023-2024 Publish.pdf",
+          "file_name": null,
+          "source": null,
+          "path": null,
+          "chunk_index": 227,
+          "score": 0.5,
+          "relevance_score": 0.03008185
+        },
+        {
+          "id": "4d89dda1-8234-41ab-96b6-ea811cdc0ed3",
+          "doc_id": "1c6ceccf970f341b",
+          "filename": "Buku Pedoman Kemahasiswaan.pdf",
+          "file_name": null,
+          "source": null,
+          "path": null,
+          "chunk_index": 0,
+          "score": 0.33333334,
+          "relevance_score": -0.02051031
+        }
+      ],
+      "live_q05_student_guide_exact_title": [
+        {
+          "id": "ca49f97c-3524-415b-bac4-08569fa2c5ac",
+          "doc_id": "1c6ceccf970f341b",
+          "filename": "Buku Pedoman Kemahasiswaan.pdf",
+          "file_name": null,
+          "source": null,
+          "path": null,
+          "chunk_index": 2,
+          "score": 0.44444445,
+          "relevance_score": 0.31743869
+        },
+        {
+          "id": "a9a60304-34a2-4a75-88d3-8c46b8d28e7b",
+          "doc_id": "1c6ceccf970f341b",
+          "filename": "Buku Pedoman Kemahasiswaan.pdf",
+          "file_name": null,
+          "source": null,
+          "path": null,
+          "chunk_index": 278,
+          "score": 0.75,
+          "relevance_score": 0.29943255
+        },
+        {
+          "id": "80e6af99-7a7b-4039-a1d2-112c5a30d654",
+          "doc_id": "1c6ceccf970f341b",
+          "filename": "Buku Pedoman Kemahasiswaan.pdf",
+          "file_name": null,
+          "source": null,
+          "path": null,
+          "chunk_index": 6,
+          "score": 0.14285715,
+          "relevance_score": 0.18795556
+        },
+        {
+          "id": "b6231dfa-3d38-4943-a53a-b090526bd646",
+          "doc_id": "1c6ceccf970f341b",
+          "filename": "Buku Pedoman Kemahasiswaan.pdf",
+          "file_name": null,
+          "source": null,
+          "path": null,
+          "chunk_index": 49,
+          "score": 0.2,
+          "relevance_score": 0.0763403
+        },
+        {
+          "id": "0554655e-c72e-41d3-8c69-b01e03a2c096",
+          "doc_id": "1c6ceccf970f341b",
+          "filename": "Buku Pedoman Kemahasiswaan.pdf",
+          "file_name": null,
+          "source": null,
+          "path": null,
+          "chunk_index": 76,
+          "score": 0.25,
+          "relevance_score": 0.05862068
+        }
+      ],
+      "live_q06_student_guide_rules": [
+        {
+          "id": "94ffb68c-153b-4434-8413-e05d99f38de0",
+          "doc_id": "1c6ceccf970f341b",
+          "filename": "Buku Pedoman Kemahasiswaan.pdf",
+          "file_name": null,
+          "source": null,
+          "path": null,
+          "chunk_index": 368,
+          "score": 0.2,
+          "relevance_score": 0.29036671
+        },
+        {
+          "id": "32ff1d8c-0b52-403f-b5c2-15225edc95e0",
+          "doc_id": "1c6ceccf970f341b",
+          "filename": "Buku Pedoman Kemahasiswaan.pdf",
+          "file_name": null,
+          "source": null,
+          "path": null,
+          "chunk_index": 339,
+          "score": 0.64285713,
+          "relevance_score": 0.16480315
+        },
+        {
+          "id": "80e6af99-7a7b-4039-a1d2-112c5a30d654",
+          "doc_id": "1c6ceccf970f341b",
+          "filename": "Buku Pedoman Kemahasiswaan.pdf",
+          "file_name": null,
+          "source": null,
+          "path": null,
+          "chunk_index": 6,
+          "score": 0.4166667,
+          "relevance_score": 0.11108291
+        },
+        {
+          "id": "42aded29-c319-4768-a238-a72dd831b1ee",
+          "doc_id": "1c6ceccf970f341b",
+          "filename": "Buku Pedoman Kemahasiswaan.pdf",
+          "file_name": null,
+          "source": null,
+          "path": null,
+          "chunk_index": 211,
+          "score": 0.25,
+          "relevance_score": 0.08743218
+        },
+        {
+          "id": "e9516a8d-b6c1-49ea-8f91-cc72315fc895",
+          "doc_id": "d6f577190fbc0a91",
+          "filename": "Wadek1-Buku Panduan Akademik FT Unpas 2023-2024 Publish.pdf",
+          "file_name": null,
+          "source": null,
+          "path": null,
+          "chunk_index": 52,
+          "score": 0.5,
+          "relevance_score": 0.08624875
+        }
+      ],
+      "live_q07_student_guide_services": [
+        {
+          "id": "3f6d2db3-95cb-413a-97d4-59b8f9f8753a",
+          "doc_id": "d6f577190fbc0a91",
+          "filename": "Wadek1-Buku Panduan Akademik FT Unpas 2023-2024 Publish.pdf",
+          "file_name": null,
+          "source": null,
+          "path": null,
+          "chunk_index": 58,
+          "score": 0.5555556,
+          "relevance_score": 0.23926984
+        },
+        {
+          "id": "239e3cbd-63a3-46ce-bba4-87d1ab92485e",
+          "doc_id": "d6f577190fbc0a91",
+          "filename": "Wadek1-Buku Panduan Akademik FT Unpas 2023-2024 Publish.pdf",
+          "file_name": null,
+          "source": null,
+          "path": null,
+          "chunk_index": 315,
+          "score": 0.5,
+          "relevance_score": 0.12709585
+        },
+        {
+          "id": "3eba663a-95f6-42c3-8f82-27080ca9cced",
+          "doc_id": "d6f577190fbc0a91",
+          "filename": "Wadek1-Buku Panduan Akademik FT Unpas 2023-2024 Publish.pdf",
+          "file_name": null,
+          "source": null,
+          "path": null,
+          "chunk_index": 323,
+          "score": 0.325,
+          "relevance_score": 0.0642264
+        },
+        {
+          "id": "2c5d0679-6efb-4996-a6b3-f31084bc2a16",
+          "doc_id": "d6f577190fbc0a91",
+          "filename": "Wadek1-Buku Panduan Akademik FT Unpas 2023-2024 Publish.pdf",
+          "file_name": null,
+          "source": null,
+          "path": null,
+          "chunk_index": 51,
+          "score": 0.25,
+          "relevance_score": 0.02379595
+        },
+        {
+          "id": "80e6af99-7a7b-4039-a1d2-112c5a30d654",
+          "doc_id": "1c6ceccf970f341b",
+          "filename": "Buku Pedoman Kemahasiswaan.pdf",
+          "file_name": null,
+          "source": null,
+          "path": null,
+          "chunk_index": 6,
+          "score": 0.16666667,
+          "relevance_score": 0.01815093
+        }
+      ],
+      "live_q08_student_guide_discipline": [
+        {
+          "id": "c500230a-3abe-4590-947f-c35f45be5839",
+          "doc_id": "d6f577190fbc0a91",
+          "filename": "Wadek1-Buku Panduan Akademik FT Unpas 2023-2024 Publish.pdf",
+          "file_name": null,
+          "source": null,
+          "path": null,
+          "chunk_index": 269,
+          "score": 0.53333336,
+          "relevance_score": 0.3245258
+        },
+        {
+          "id": "209d163a-a5b1-441a-a4cd-3c4baa26f398",
+          "doc_id": "1c6ceccf970f341b",
+          "filename": "Buku Pedoman Kemahasiswaan.pdf",
+          "file_name": null,
+          "source": null,
+          "path": null,
+          "chunk_index": 352,
+          "score": 0.75,
+          "relevance_score": 0.26211172
+        },
+        {
+          "id": "2fc9355e-c7a5-4314-bb95-7b855174f8c0",
+          "doc_id": "d6f577190fbc0a91",
+          "filename": "Wadek1-Buku Panduan Akademik FT Unpas 2023-2024 Publish.pdf",
+          "file_name": null,
+          "source": null,
+          "path": null,
+          "chunk_index": 275,
+          "score": 0.75,
+          "relevance_score": 0.23650289
+        },
+        {
+          "id": "8826c4a1-1f2f-49af-a6ca-a126bad60f8b",
+          "doc_id": "1c6ceccf970f341b",
+          "filename": "Buku Pedoman Kemahasiswaan.pdf",
+          "file_name": null,
+          "source": null,
+          "path": null,
+          "chunk_index": 320,
+          "score": 0.22916667,
+          "relevance_score": 0.18380928
+        },
+        {
+          "id": "4f16866f-82db-47a8-a044-74fa6dbb3e97",
+          "doc_id": "1c6ceccf970f341b",
+          "filename": "Buku Pedoman Kemahasiswaan.pdf",
+          "file_name": null,
+          "source": null,
+          "path": null,
+          "chunk_index": 353,
+          "score": 0.25396827,
+          "relevance_score": 0.12660739
+        }
+      ],
+      "live_q09_curriculum_exact_title": [
+        {
+          "id": "14eb3b8a-b8e4-4036-8a79-c1f5aa313388",
+          "doc_id": "d3a4d9c4e32bed73",
+          "filename": "Kurikulum Teknik Informatika Unpas 2021 (versi Publik - Tanpa RPS) (4).pdf",
+          "file_name": null,
+          "source": null,
+          "path": null,
+          "chunk_index": 13,
+          "score": 1.0,
+          "relevance_score": 0.28022262
+        },
+        {
+          "id": "948c296e-d5bb-4be1-93e7-2bc9892fff0e",
+          "doc_id": "d6f577190fbc0a91",
+          "filename": "Wadek1-Buku Panduan Akademik FT Unpas 2023-2024 Publish.pdf",
+          "file_name": null,
+          "source": null,
+          "path": null,
+          "chunk_index": 130,
+          "score": 0.5833334,
+          "relevance_score": 0.192985
+        },
+        {
+          "id": "050ade97-b85c-405f-9bd5-44668dcaa534",
+          "doc_id": "d3a4d9c4e32bed73",
+          "filename": "Kurikulum Teknik Informatika Unpas 2021 (versi Publik - Tanpa RPS) (4).pdf",
+          "file_name": null,
+          "source": null,
+          "path": null,
+          "chunk_index": 14,
+          "score": 0.45,
+          "relevance_score": 0.12707926
+        },
+        {
+          "id": "c517eeb8-d1cf-4896-8df8-70f75722fc35",
+          "doc_id": "d3a4d9c4e32bed73",
+          "filename": "Kurikulum Teknik Informatika Unpas 2021 (versi Publik - Tanpa RPS) (4).pdf",
+          "file_name": null,
+          "source": null,
+          "path": null,
+          "chunk_index": 15,
+          "score": 0.15,
+          "relevance_score": 0.04934166
+        },
+        {
+          "id": "ff994b17-44d2-43b3-ae0e-5a51b5b4a85b",
+          "doc_id": "d6f577190fbc0a91",
+          "filename": "Wadek1-Buku Panduan Akademik FT Unpas 2023-2024 Publish.pdf",
+          "file_name": null,
+          "source": null,
+          "path": null,
+          "chunk_index": 288,
+          "score": 0.16666667,
+          "relevance_score": 0.03396088
+        }
+      ],
+      "live_q10_curriculum_structure": [
+        {
+          "id": "948c296e-d5bb-4be1-93e7-2bc9892fff0e",
+          "doc_id": "d6f577190fbc0a91",
+          "filename": "Wadek1-Buku Panduan Akademik FT Unpas 2023-2024 Publish.pdf",
+          "file_name": null,
+          "source": null,
+          "path": null,
+          "chunk_index": 130,
+          "score": 0.7,
+          "relevance_score": 0.39837664
+        },
+        {
+          "id": "050ade97-b85c-405f-9bd5-44668dcaa534",
+          "doc_id": "d3a4d9c4e32bed73",
+          "filename": "Kurikulum Teknik Informatika Unpas 2021 (versi Publik - Tanpa RPS) (4).pdf",
+          "file_name": null,
+          "source": null,
+          "path": null,
+          "chunk_index": 14,
+          "score": 0.8333334,
+          "relevance_score": 0.28295732
+        },
+        {
+          "id": "14eb3b8a-b8e4-4036-8a79-c1f5aa313388",
+          "doc_id": "d3a4d9c4e32bed73",
+          "filename": "Kurikulum Teknik Informatika Unpas 2021 (versi Publik - Tanpa RPS) (4).pdf",
+          "file_name": null,
+          "source": null,
+          "path": null,
+          "chunk_index": 13,
+          "score": 0.5833334,
+          "relevance_score": 0.14040047
+        },
+        {
+          "id": "c288c456-3974-41ff-aa08-b942121c4dea",
+          "doc_id": "d3a4d9c4e32bed73",
+          "filename": "Kurikulum Teknik Informatika Unpas 2021 (versi Publik - Tanpa RPS) (4).pdf",
+          "file_name": null,
+          "source": null,
+          "path": null,
+          "chunk_index": 1,
+          "score": 0.33333334,
+          "relevance_score": 0.05529399
+        },
+        {
+          "id": "0297203f-5fad-4996-aa7c-e752d0f26629",
+          "doc_id": "d6f577190fbc0a91",
+          "filename": "Wadek1-Buku Panduan Akademik FT Unpas 2023-2024 Publish.pdf",
+          "file_name": null,
+          "source": null,
+          "path": null,
+          "chunk_index": 73,
+          "score": 0.2,
+          "relevance_score": 0.03292366
+        }
+      ],
+      "live_q11_curriculum_courses": [
+        {
+          "id": "6b763e71-40bb-414e-8670-0a20f20dfa13",
+          "doc_id": "d3a4d9c4e32bed73",
+          "filename": "Kurikulum Teknik Informatika Unpas 2021 (versi Publik - Tanpa RPS) (4).pdf",
+          "file_name": null,
+          "source": null,
+          "path": null,
+          "chunk_index": 126,
+          "score": 0.33333334,
+          "relevance_score": 0.17845865
+        },
+        {
+          "id": "050ade97-b85c-405f-9bd5-44668dcaa534",
+          "doc_id": "d3a4d9c4e32bed73",
+          "filename": "Kurikulum Teknik Informatika Unpas 2021 (versi Publik - Tanpa RPS) (4).pdf",
+          "file_name": null,
+          "source": null,
+          "path": null,
+          "chunk_index": 14,
+          "score": 0.5,
+          "relevance_score": 0.15858716
+        },
+        {
+          "id": "40ca7903-dd32-4979-b10f-bc6f312391af",
+          "doc_id": "d3a4d9c4e32bed73",
+          "filename": "Kurikulum Teknik Informatika Unpas 2021 (versi Publik - Tanpa RPS) (4).pdf",
+          "file_name": null,
+          "source": null,
+          "path": null,
+          "chunk_index": 120,
+          "score": 0.2,
+          "relevance_score": 0.15229219
+        },
+        {
+          "id": "5fa6e959-e59d-4361-a5bc-f528d4d5f01d",
+          "doc_id": "d3a4d9c4e32bed73",
+          "filename": "Kurikulum Teknik Informatika Unpas 2021 (versi Publik - Tanpa RPS) (4).pdf",
+          "file_name": null,
+          "source": null,
+          "path": null,
+          "chunk_index": 189,
+          "score": 0.5833334,
+          "relevance_score": 0.107828
+        },
+        {
+          "id": "b69fa831-272e-4364-a694-b272fb96fa20",
+          "doc_id": "d3a4d9c4e32bed73",
+          "filename": "Kurikulum Teknik Informatika Unpas 2021 (versi Publik - Tanpa RPS) (4).pdf",
+          "file_name": null,
+          "source": null,
+          "path": null,
+          "chunk_index": 190,
+          "score": 0.17692308,
+          "relevance_score": 0.09304237
+        }
+      ],
+      "live_q12_curriculum_sks": [
+        {
+          "id": "85fe24d0-d6d6-43e6-a1af-117da0d4f858",
+          "doc_id": "d6f577190fbc0a91",
+          "filename": "Wadek1-Buku Panduan Akademik FT Unpas 2023-2024 Publish.pdf",
+          "file_name": null,
+          "source": null,
+          "path": null,
+          "chunk_index": 287,
+          "score": 0.33333334,
+          "relevance_score": 0.23698963
+        },
+        {
+          "id": "4d153558-a33f-4efb-965a-42082915544e",
+          "doc_id": "d6f577190fbc0a91",
+          "filename": "Wadek1-Buku Panduan Akademik FT Unpas 2023-2024 Publish.pdf",
+          "file_name": null,
+          "source": null,
+          "path": null,
+          "chunk_index": 164,
+          "score": 0.55263156,
+          "relevance_score": 0.1403383
+        },
+        {
+          "id": "52ec7f0d-e1bc-4f8a-abae-129f464e49f7",
+          "doc_id": "d6f577190fbc0a91",
+          "filename": "Wadek1-Buku Panduan Akademik FT Unpas 2023-2024 Publish.pdf",
+          "file_name": null,
+          "source": null,
+          "path": null,
+          "chunk_index": 185,
+          "score": 0.22619048,
+          "relevance_score": 0.0767771
+        },
+        {
+          "id": "82cb2770-d37e-4631-8f33-5ec5ae075c80",
+          "doc_id": "d6f577190fbc0a91",
+          "filename": "Wadek1-Buku Panduan Akademik FT Unpas 2023-2024 Publish.pdf",
+          "file_name": null,
+          "source": null,
+          "path": null,
+          "chunk_index": 183,
+          "score": 0.25,
+          "relevance_score": 0.06659398
+        },
+        {
+          "id": "0fd66651-6e25-46a0-bbe9-83bd8906b20a",
+          "doc_id": "d3a4d9c4e32bed73",
+          "filename": "Kurikulum Teknik Informatika Unpas 2021 (versi Publik - Tanpa RPS) (4).pdf",
+          "file_name": null,
+          "source": null,
+          "path": null,
+          "chunk_index": 188,
+          "score": 0.33333334,
+          "relevance_score": 0.06203924
+        }
+      ]
+    }
+  }
+}

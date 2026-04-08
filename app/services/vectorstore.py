@@ -153,7 +153,9 @@ async def upsert_points(
             },
             payload=pay,
         )
-        for uid, vec, sparse, pay in zip(ids, vectors, sparse_vectors, payloads, strict=False)
+        for uid, vec, sparse, pay in zip(
+            ids, vectors, sparse_vectors, payloads, strict=False
+        )
     ]
     start_ms = now_ms()
     try:

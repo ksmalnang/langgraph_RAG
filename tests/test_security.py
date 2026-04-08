@@ -84,6 +84,7 @@ async def test_ingest_disabled_without_key_in_non_local_env():
         ingest_api_key=None,
         ingest_rate_limit=5,
         rate_limit_window_seconds=60,
+        ingest_max_upload_mb=20,
     )
 
     with patch("app.api.ingest.get_settings", return_value=fake_settings):
@@ -104,6 +105,7 @@ async def test_ingest_requires_token_when_configured():
         ingest_api_key="top-secret",
         ingest_rate_limit=5,
         rate_limit_window_seconds=60,
+        ingest_max_upload_mb=20,
     )
 
     with patch("app.api.ingest.get_settings", return_value=fake_settings):

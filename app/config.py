@@ -50,6 +50,7 @@ class Settings(BaseSettings):
     app_env: str = "development"
     cors_allow_origins: str = ""
     ingest_api_key: str | None = None
+    ingest_max_upload_mb: int = 20
 
     # ── Route abuse protection ──────────────────────────
     rate_limit_window_seconds: int = 60
