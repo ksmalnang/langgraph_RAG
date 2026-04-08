@@ -14,6 +14,7 @@ from app.config import get_settings
 from app.services.embeddings import embed_query
 from app.services.reranker import rerank
 from app.services.vectorstore import hybrid_search
+from app.utils.helpers import generate_doc_id
 
 
 @dataclass(frozen=True)
@@ -84,16 +85,93 @@ def load_stage_predictions(path: str | Path) -> dict[str, dict[str, list[dict[st
     return {"pre_rerank": pre, "post_rerank": post}
 
 
+def _normalize_filename(value: Any) -> str | None:
+    if not isinstance(value, str):
+        return None
+    stripped = value.strip()
+    if not stripped:
+        return None
+    basename = stripped.replace("\\", "/").split("/")[-1].strip().lower()
+    return basename or None
+
+
+def _normalize_doc_id(value: Any) -> str | None:
+    if value is None:
+        return None
+    normalized = str(value).strip().lower()
+    return normalized or None
+
+
+def _normalize_chunk_index(value: Any) -> int | None:
+    if value is None:
+        return None
+    try:
+        return int(value)
+    except (TypeError, ValueError):
+        return None
+
+
+def _candidate_filenames(candidate: dict[str, Any]) -> set[str]:
+    names: set[str] = set()
+    for key in ("filename", "file_name", "source", "source_file", "path"):
+        normalized = _normalize_filename(candidate.get(key))
+        if normalized:
+            names.add(normalized)
+    return names
+
+
+def _candidate_doc_ids(candidate: dict[str, Any], candidate_names: set[str]) -> set[str]:
+    ids: set[str] = set()
+    candidate_doc_id = _normalize_doc_id(candidate.get("doc_id"))
+    if candidate_doc_id:
+        ids.add(candidate_doc_id)
+
+    for name in candidate_names:
+        ids.add(generate_doc_id(name))
+    return ids
+
+
+def _compact_candidate_debug(candidate: dict[str, Any]) -> dict[str, Any]:
+    return {
+        "id": candidate.get("id"),
+        "doc_id": candidate.get("doc_id"),
+        "filename": candidate.get("filename"),
+        "file_name": candidate.get("file_name"),
+        "source": candidate.get("source"),
+        "path": candidate.get("path"),
+        "chunk_index": candidate.get("chunk_index"),
+        "score": candidate.get("score"),
+        "relevance_score": candidate.get("relevance_score"),
+    }
+
+
 def _matches_target(candidate: dict[str, Any], target: TargetSpec) -> bool:
+    candidate_names = _candidate_filenames(candidate)
+    candidate_doc_ids = _candidate_doc_ids(candidate, candidate_names)
+
     if target.expected_filename is not None:
-        if candidate.get("filename") != target.expected_filename:
+        expected_name = _normalize_filename(target.expected_filename)
+        if expected_name is None:
             return False
+
+        if expected_name not in candidate_names:
+            derived_doc_id = generate_doc_id(expected_name)
+            if derived_doc_id not in candidate_doc_ids:
+                return False
+
     if target.expected_doc_id is not None:
-        if candidate.get("doc_id") != target.expected_doc_id:
+        expected_doc_id = _normalize_doc_id(target.expected_doc_id)
+        if expected_doc_id is None:
             return False
+        if expected_doc_id not in candidate_doc_ids:
+            return False
+
     if target.expected_chunk_index is not None:
-        if candidate.get("chunk_index") != target.expected_chunk_index:
+        candidate_chunk_index = _normalize_chunk_index(candidate.get("chunk_index"))
+        target_chunk_index = _normalize_chunk_index(target.expected_chunk_index)
+        if candidate_chunk_index != target_chunk_index:
             return False
+
     return True
 
 
@@ -244,6 +322,8 @@ async def evaluate_live(
 
     pre_results: dict[str, list[dict[str, Any]]] = {}
     post_results: dict[str, list[dict[str, Any]]] = {}
+    debug_pre: dict[str, list[dict[str, Any]]] = {}
+    debug_post: dict[str, list[dict[str, Any]]] = {}
 
     for case in cases:
         vector = await embed_query(case.query)
@@ -259,6 +339,12 @@ async def evaluate_live(
         )
         pre_results[case.name] = pre_docs[:k_eval]
         post_results[case.name] = reranked_docs[:k_eval]
+        debug_pre[case.name] = [
+            _compact_candidate_debug(doc) for doc in pre_docs[:k_eval]
+        ]
+        debug_post[case.name] = [
+            _compact_candidate_debug(doc) for doc in reranked_docs[:k_eval]
+        ]
 
     stage_scores = {
         "pre_rerank": score_stage(cases, pre_results, k_eval=k_eval),
@@ -282,6 +368,11 @@ async def evaluate_live(
             "reranker_model": settings.jina_reranker_model,
         },
         "stages": stage_scores,
+        "debug_candidates": {
+            "k_debug": k_eval,
+            "pre_rerank": debug_pre,
+            "post_rerank": debug_post,
+        },
     }
 
 
