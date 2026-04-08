@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from types import SimpleNamespace
 from unittest.mock import AsyncMock, patch
 
 from httpx import ASGITransport, AsyncClient
@@ -126,3 +127,24 @@ async def test_ingest_unsupported_file():
         )
 
     assert response.status_code == 422
+
+
+@pytest.mark.asyncio
+async def test_ingest_rejects_file_over_size_limit():
+    fake_settings = SimpleNamespace(
+        app_env="development",
+        ingest_api_key=None,
+        ingest_rate_limit=5,
+        rate_limit_window_seconds=60,
+        ingest_max_upload_mb=1,
+    )
+
+    with patch("app.api.ingest.get_settings", return_value=fake_settings):
+        transport = ASGITransport(app=app)
+        async with AsyncClient(transport=transport, base_url="http://test") as client:
+            response = await client.post(
+                "/ingest",
+                files={"file": ("big.md", b"a" * (1024 * 1024 + 1), "text/markdown")},
+            )
+
+    assert response.status_code == 413

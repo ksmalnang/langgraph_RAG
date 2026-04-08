@@ -63,7 +63,7 @@ async def chat(
     """Process a chat message through the LangGraph agent."""
     settings = get_settings()
     client_ip = http_request.client.host if http_request.client else "unknown"
-    if not allow_request(
+    if not await allow_request(
         key=f"chat:{client_ip}",
         limit=settings.chat_rate_limit,
         window_seconds=settings.rate_limit_window_seconds,

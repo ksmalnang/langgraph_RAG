@@ -6,7 +6,7 @@ from pathlib import Path
 import shutil
 import tempfile
 
-from fastapi import APIRouter, BackgroundTasks, Header, HTTPException, Request, UploadFile
+from fastapi import APIRouter, Header, HTTPException, Request, UploadFile
 
 from app.config import get_settings
 from app.ingestion.pipeline import ingest_document
@@ -35,18 +35,39 @@ def _validate_file(file: UploadFile) -> None:
         )
 
 
+async def _save_upload_with_limit(
+    file: UploadFile,
+    target_path: Path,
+    max_bytes: int,
+) -> int:
+    """Stream upload to disk and reject files larger than max_bytes."""
+    total_bytes = 0
+    chunk_size = 1024 * 1024
+    with open(target_path, "wb") as out_file:  # noqa: ASYNC230
+        while True:
+            chunk = await file.read(chunk_size)
+            if not chunk:
+                break
+            total_bytes += len(chunk)
+            if total_bytes > max_bytes:
+                raise HTTPException(
+                    status_code=413,
+                    detail=(
+                        f"File too large. Maximum allowed size is "
+                        f"{max_bytes // (1024 * 1024)} MB."
+                    ),
+                )
+            out_file.write(chunk)
+    return total_bytes
+
+
 @router.post("/ingest", response_model=IngestResponse)
 async def ingest(
     file: UploadFile,
-    background_tasks: BackgroundTasks,
     request: Request,
     x_ingest_token: str | None = Header(default=None, alias="X-Ingest-Token"),
 ) -> IngestResponse:
-    """Upload a document and kick off ingestion.
-
-    The file is saved to a temp directory, then the ingestion pipeline
-    runs as a **background task** so the response returns quickly.
-    """
+    """Upload a document and run ingestion in-request."""
     settings = get_settings()
     app_env = settings.app_env
 
@@ -60,7 +81,7 @@ async def ingest(
         )
 
     client_ip = request.client.host if request.client else "unknown"
-    if not allow_request(
+    if not await allow_request(
         key=f"ingest:{client_ip}",
         limit=settings.ingest_rate_limit,
         window_seconds=settings.rate_limit_window_seconds,
@@ -73,19 +94,21 @@ async def ingest(
     # Persist upload to a temp file
     tmp_dir = Path(tempfile.mkdtemp())
     tmp_path = tmp_dir / file.filename
-    # Large file upload — streaming write, do NOT refactor to file.read()
-    with open(tmp_path, "wb") as f:  # noqa: ASYNC230
-        shutil.copyfileobj(file.file, f)
-
-    logger.info("File saved to %s — starting ingestion", tmp_path)
-
-    result = await ingest_document(tmp_path)
-
-    # Clean up temp files in background
-    def _cleanup() -> None:
+    max_upload_bytes = settings.ingest_max_upload_mb * 1024 * 1024
+    try:
+        bytes_written = await _save_upload_with_limit(
+            file=file,
+            target_path=tmp_path,
+            max_bytes=max_upload_bytes,
+        )
+        logger.info(
+            "File saved to %s (%d bytes) — starting ingestion",
+            tmp_path,
+            bytes_written,
+        )
+        result = await ingest_document(tmp_path)
+    finally:
         shutil.rmtree(tmp_dir, ignore_errors=True)
-
-    background_tasks.add_task(_cleanup)
 
     return IngestResponse(
         doc_id=result["doc_id"],
