@@ -1,0 +1,74 @@
+[
+  {
+    "name": "live_q01_handbook_exact_title",
+    "query": "Wadek1 Buku Panduan Akademik FT Unpas 2023 2024 Publish",
+    "expected_doc_id": "d6f577190fbc0a91",
+    "k_target": 1
+  },
+  {
+    "name": "live_q02_handbook_admission",
+    "query": "informasi pendaftaran mahasiswa baru fakultas teknik",
+    "expected_doc_id": "d6f577190fbc0a91",
+    "k_target": 3
+  },
+  {
+    "name": "live_q03_handbook_akademik",
+    "query": "aturan akademik fakultas teknik unpas",
+    "expected_doc_id": "d6f577190fbc0a91",
+    "k_target": 3
+  },
+  {
+    "name": "live_q04_handbook_ukt",
+    "query": "ketentuan pembayaran biaya kuliah ukt",
+    "expected_doc_id": "d6f577190fbc0a91",
+    "k_target": 5
+  },
+  {
+    "name": "live_q05_student_guide_exact_title",
+    "query": "Buku Pedoman Kemahasiswaan",
+    "expected_doc_id": "1c6ceccf970f341b",
+    "k_target": 1
+  },
+  {
+    "name": "live_q06_student_guide_rules",
+    "query": "aturan kegiatan kemahasiswaan dan tata tertib",
+    "expected_doc_id": "1c6ceccf970f341b",
+    "k_target": 3
+  },
+  {
+    "name": "live_q07_student_guide_services",
+    "query": "layanan kemahasiswaan fakultas",
+    "expected_doc_id": "1c6ceccf970f341b",
+    "k_target": 5
+  },
+  {
+    "name": "live_q08_student_guide_discipline",
+    "query": "sanksi pelanggaran mahasiswa",
+    "expected_doc_id": "1c6ceccf970f341b",
+    "k_target": 5
+  },
+  {
+    "name": "live_q09_curriculum_exact_title",
+    "query": "Kurikulum Teknik Informatika Unpas 2021 versi Publik Tanpa RPS",
+    "expected_doc_id": "d3a4d9c4e32bed73",
+    "k_target": 1
+  },
+  {
+    "name": "live_q10_curriculum_structure",
+    "query": "struktur kurikulum teknik informatika unpas",
+    "expected_doc_id": "d3a4d9c4e32bed73",
+    "k_target": 3
+  },
+  {
+    "name": "live_q11_curriculum_courses",
+    "query": "daftar mata kuliah wajib teknik informatika",
+    "expected_doc_id": "d3a4d9c4e32bed73",
+    "k_target": 3
+  },
+  {
+    "name": "live_q12_curriculum_sks",
+    "query": "jumlah sks kurikulum teknik informatika",
+    "expected_doc_id": "d3a4d9c4e32bed73",
+    "k_target": 5
+  }
+]

@@ -1,0 +1,88 @@
+[
+  {
+    "name": "hard_q01_faculty_rulebook_scope",
+    "query": "dokumen acuan kebijakan akademik tingkat fakultas teknik unpas",
+    "expected_doc_id": "d6f577190fbc0a91",
+    "k_target": 3
+  },
+  {
+    "name": "hard_q02_re_registration_and_payment",
+    "query": "aturan daftar ulang dan kewajiban pembayaran mahasiswa",
+    "expected_doc_id": "d6f577190fbc0a91",
+    "k_target": 5
+  },
+  {
+    "name": "hard_q03_study_leave_and_reactivation",
+    "query": "ketentuan cuti kuliah serta prosedur aktif kembali",
+    "expected_doc_id": "d6f577190fbc0a91",
+    "k_target": 5
+  },
+  {
+    "name": "hard_q04_exam_and_attendance_policy",
+    "query": "syarat mengikuti ujian dan aturan kehadiran perkuliahan",
+    "expected_doc_id": "d6f577190fbc0a91",
+    "k_target": 5
+  },
+  {
+    "name": "hard_q05_student_conduct_framework",
+    "query": "pedoman etika dan tata tertib aktivitas kemahasiswaan",
+    "expected_doc_id": "1c6ceccf970f341b",
+    "k_target": 3
+  },
+  {
+    "name": "hard_q06_student_organization_governance",
+    "query": "aturan organisasi mahasiswa dan pembinaan kegiatan kampus",
+    "expected_doc_id": "1c6ceccf970f341b",
+    "k_target": 5
+  },
+  {
+    "name": "hard_q07_violation_and_sanction",
+    "query": "klasifikasi pelanggaran mahasiswa beserta sanksinya",
+    "expected_doc_id": "1c6ceccf970f341b",
+    "k_target": 5
+  },
+  {
+    "name": "hard_q08_student_rights_and_services",
+    "query": "hak mahasiswa dan layanan kemahasiswaan yang tersedia",
+    "expected_doc_id": "1c6ceccf970f341b",
+    "k_target": 5
+  },
+  {
+    "name": "hard_q09_curriculum_design_reference",
+    "query": "rujukan utama penyusunan kurikulum teknik informatika 2021",
+    "expected_doc_id": "d3a4d9c4e32bed73",
+    "k_target": 3
+  },
+  {
+    "name": "hard_q10_learning_outcomes_mapping",
+    "query": "pemetaan capaian pembelajaran ke struktur mata kuliah",
+    "expected_doc_id": "d3a4d9c4e32bed73",
+    "k_target": 5
+  },
+  {
+    "name": "hard_q11_credit_distribution",
+    "query": "sebaran sks antar semester pada kurikulum informatika",
+    "expected_doc_id": "d3a4d9c4e32bed73",
+    "k_target": 5
+  },
+  {
+    "name": "hard_q12_course_grouping_logic",
+    "query": "pengelompokan mata kuliah dasar inti dan pilihan program studi",
+    "expected_doc_id": "d3a4d9c4e32bed73",
+    "k_target": 5
+  },
+  {
+    "name": "hard_q13_policy_and_student_life_bridge",
+    "query": "dokumen apa yang membahas kebijakan akademik sekaligus kehidupan kemahasiswaan",
+    "k_target": 5,
+    "expected_targets": [
+      {
+        "expected_doc_id": "d6f577190fbc0a91"
+      },
+      {
+        "expected_doc_id": "1c6ceccf970f341b"
+      }
+    ],
+    "notes": "Cross-document recall check for academic policy + student life."
+  }
+]

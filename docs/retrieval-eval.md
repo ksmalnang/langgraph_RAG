@@ -6,6 +6,8 @@ It does not score final answer generation and does not include student/SIAKAD fl
 ### Dataset
 
 - Benchmark dataset: `tests/fixtures/retrieval_eval.json`
+- Alternate live dataset for current 3-doc corpus: `tests/fixtures/retrieval_eval_live_current_corpus.json`
+- Harder paraphrase live dataset for current 3-doc corpus: `tests/fixtures/retrieval_eval_live_current_corpus_hard.json`
 - Fixture predictions: `tests/fixtures/retrieval_eval_predictions.json`
 - Baseline snapshot: `tests/fixtures/retrieval_eval_baseline.json`
 
@@ -57,6 +59,52 @@ Live-mode (real services + current corpus):
   --output tests/fixtures/retrieval_eval_live.json `
   --k-eval 5
 ```
+
+Live-mode (current 3-doc corpus dataset):
+
+```powershell
+.\.venv\Scripts\python.exe -m app.eval.retrieval_eval `
+  --mode live `
+  --dataset tests/fixtures/retrieval_eval_live_current_corpus.json `
+  --output tests/fixtures/retrieval_eval_live_current_corpus_report.json `
+  --k-eval 5
+```
+
+Live baseline snapshot (current 3-doc corpus dataset):
+
+```powershell
+.\.venv\Scripts\python.exe -m app.eval.retrieval_eval `
+  --mode live `
+  --dataset tests/fixtures/retrieval_eval_live_current_corpus.json `
+  --output tests/fixtures/retrieval_eval_live_current_corpus_baseline.json `
+  --k-eval 5 `
+  --evaluation-date 2026-04-09
+```
+
+Live baseline snapshot (hard paraphrase dataset):
+
+```powershell
+.\.venv\Scripts\python.exe -m app.eval.retrieval_eval `
+  --mode live `
+  --dataset tests/fixtures/retrieval_eval_live_current_corpus_hard.json `
+  --output tests/fixtures/retrieval_eval_live_current_corpus_hard_baseline.json `
+  --k-eval 5 `
+  --evaluation-date 2026-04-09
+```
+
+Live-mode output also includes `debug_candidates` with compact top-`k_eval` metadata
+per query and stage (`doc_id`, `filename`, `chunk_index`, score fields). This is
+used to diagnose identity/matching issues without re-running retrieval traces.
+
+### Target Matching Rules
+
+Matching in eval is identity-aware and normalization-safe:
+- filename match is normalized by basename and lowercase
+- doc_id match accepts exact `doc_id` and filename-derived `doc_id`
+- chunk index is compared after integer normalization
+
+This allows stable scoring when live payload formatting differs (for example
+`kb/FILE.PDF` vs `file.pdf`) while still enforcing deterministic identity checks.
 
 ### Re-ingestion Identity Rules
 
