@@ -166,4 +166,5 @@ async def ingest(
         doc_id=result["doc_id"],
         filename=result["filename"],
         chunks_count=result["chunks_count"],
+        skipped=result.get("skipped", False),
     )
