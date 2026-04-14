@@ -112,6 +112,9 @@ class IngestResponse(BaseModel):
     doc_id: str
     filename: str
     chunks_count: int
+    skipped: bool = Field(
+        default=False, description="Whether the file was skipped due to checkpoint"
+    )
     message: str = "Document ingested successfully"
 
 
