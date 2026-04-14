@@ -17,6 +17,7 @@ dependencies = [
     "langchain-core>=1.2.16",
     "langchain-openai>=1.1.10",
     "langgraph>=1.0.10",
+    "python-json-logger>=3.2.1",
     "pydantic-settings>=2.13.1",
     "pydantic[email]>=2.12.5",
     "python-dotenv>=1.2.2",
