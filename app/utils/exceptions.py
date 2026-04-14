@@ -1,4 +1,4 @@
-"""Custom exceptions and FastAPI error handlers."""
+"""Custom exceptions and FastAPI error handlers (RFC 7807)."""
 
 from __future__ import annotations
 
@@ -6,7 +6,7 @@ from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 
-from app.schemas import ErrorResponse
+from app.api.models import ErrorResponse
 from app.utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -16,90 +16,119 @@ logger = get_logger(__name__)
 
 
 class AppError(Exception):
-    """Base application error."""
+    """Base application error with RFC 7807 problem type."""
+
+    status_code: int
+    type: str
+    title: str
+    instance: str = ""
 
     def __init__(
-        self, message: str, status_code: int = 500, code: str | None = None
+        self,
+        detail: str,
+        status_code: int = 500,
+        title: str | None = None,
     ) -> None:
-        self.message = message
+        self.detail = detail
         self.status_code = status_code
-        self.code = code
-        super().__init__(message)
+        self.type = "about:blank"
+        self.title = title or f"HTTP {status_code}"
+        super().__init__(detail)
 
 
 class IngestionError(AppError):
     """Raised when document ingestion fails."""
 
-    def __init__(self, message: str = "Document ingestion failed") -> None:
-        super().__init__(message, status_code=422, code="INGESTION_FAILED")
+    def __init__(self, detail: str = "Document ingestion failed") -> None:
+        super().__init__(detail=detail, status_code=422, title="Ingestion Failed")
 
 
 class RetrievalError(AppError):
     """Raised when vector search fails."""
 
-    def __init__(self, message: str = "Retrieval failed") -> None:
-        super().__init__(message, status_code=502, code="RETRIEVAL_FAILED")
+    def __init__(self, detail: str = "Retrieval failed") -> None:
+        super().__init__(detail=detail, status_code=502, title="Retrieval Failed")
 
 
 class RerankerError(AppError):
     """Raised when reranking fails."""
 
-    def __init__(self, message: str = "Reranking failed") -> None:
-        super().__init__(message, status_code=502, code="RERANKER_FAILED")
+    def __init__(self, detail: str = "Reranking failed") -> None:
+        super().__init__(detail=detail, status_code=502, title="Reranker Failed")
 
 
 class LLMError(AppError):
     """Raised when the LLM call fails."""
 
-    def __init__(self, message: str = "LLM generation failed") -> None:
-        super().__init__(message, status_code=502, code="LLM_FAILED")
+    def __init__(self, detail: str = "LLM generation failed") -> None:
+        super().__init__(detail=detail, status_code=502, title="LLM Failed")
 
 
 class EmbeddingError(AppError):
     """Raised when embedding generation fails."""
 
-    def __init__(self, message: str = "Embedding generation failed") -> None:
-        super().__init__(message, status_code=502, code="EMBEDDING_FAILED")
+    def __init__(self, detail: str = "Embedding generation failed") -> None:
+        super().__init__(detail=detail, status_code=502, title="Embedding Failed")
 
 
 class VectorStoreError(AppError):
     """Raised when Qdrant operations fail."""
 
-    def __init__(self, message: str = "Vector store operation failed") -> None:
-        super().__init__(message, status_code=502, code="VECTORSTORE_FAILED")
+    def __init__(self, detail: str = "Vector store operation failed") -> None:
+        super().__init__(detail=detail, status_code=502, title="Vector Store Failed")
 
 
 class MemoryStoreError(AppError):
     """Raised when Redis memory/session operations fail."""
 
-    def __init__(self, message: str = "Session store operation failed") -> None:
-        super().__init__(message, status_code=503, code="MEMORYSTORE_FAILED")
+    def __init__(self, detail: str = "Session store operation failed") -> None:
+        super().__init__(detail=detail, status_code=503, title="Memory Store Failed")
 
 
 class SiakadAuthError(AppError):
     """Raised when SIAKAD authentication fails."""
 
-    def __init__(self, message: str = "SIAKAD authentication failed") -> None:
-        super().__init__(message, status_code=401, code="SIAKAD_AUTH_FAILED")
+    def __init__(self, detail: str = "SIAKAD authentication failed") -> None:
+        super().__init__(detail=detail, status_code=401, title="Authentication Failed")
 
 
 class SiakadScrapeError(AppError):
     """Raised when SIAKAD data scraping fails."""
 
-    def __init__(self, message: str = "SIAKAD scraping failed") -> None:
-        super().__init__(message, status_code=502, code="SIAKAD_SCRAPE_FAILED")
+    def __init__(self, detail: str = "SIAKAD scraping failed") -> None:
+        super().__init__(detail=detail, status_code=502, title="Scrape Failed")
 
 
 # ── FastAPI handlers ────────────────────────────────────
+
+# Map status codes to human-readable titles.
+_STATUS_TITLES: dict[int, str] = {
+    400: "Bad Request",
+    401: "Unauthorized",
+    403: "Forbidden",
+    404: "Not Found",
+    409: "Conflict",
+    422: "Validation Error",
+    429: "Too Many Requests",
+    500: "Internal Server Error",
+    502: "Bad Gateway",
+    503: "Service Unavailable",
+}
 
 
 def register_exception_handlers(app: FastAPI) -> None:
     """Attach custom exception handlers to the FastAPI app."""
 
     @app.exception_handler(AppError)
-    async def handle_app_error(_request: Request, exc: AppError) -> JSONResponse:
-        logger.error("AppError [%s]: %s", exc.code, exc.message)
-        body = ErrorResponse(detail=exc.message, code=exc.code)
+    async def handle_app_error(request: Request, exc: AppError) -> JSONResponse:
+        logger.error("AppError [%s]: %s", exc.type, exc.detail)
+        body = ErrorResponse(
+            type=exc.type,
+            title=exc.title,
+            status=exc.status_code,
+            detail=exc.detail,
+            instance=request.url.path,
+        )
         return JSONResponse(
             status_code=exc.status_code,
             content=body.model_dump(),
@@ -107,7 +136,7 @@ def register_exception_handlers(app: FastAPI) -> None:
 
     @app.exception_handler(RequestValidationError)
     async def handle_validation_error(
-        _request: Request, exc: RequestValidationError
+        request: Request, exc: RequestValidationError
     ) -> JSONResponse:
         logger.warning("Validation error: %s", exc.errors())
         err = exc.errors()[0]
@@ -130,13 +159,24 @@ def register_exception_handlers(app: FastAPI) -> None:
             elif err_type == "string_too_long":
                 custom_msg = "Password maksimal 128 karakter."
 
-        return JSONResponse(status_code=422, content={"detail": custom_msg})
+        body = ErrorResponse(
+            type="about:blank",
+            title="Validation Error",
+            status=422,
+            detail=custom_msg,
+            instance=request.url.path,
+        )
+        return JSONResponse(status_code=422, content=body.model_dump())
 
     @app.exception_handler(Exception)
-    async def handle_unexpected(_request: Request, exc: Exception) -> JSONResponse:
+    async def handle_unexpected(request: Request, exc: Exception) -> JSONResponse:
         logger.exception("Unhandled exception: %s", exc)
         body = ErrorResponse(
-            detail="An internal server error occurred.", code="INTERNAL_ERROR"
+            type="about:blank",
+            title="Internal Server Error",
+            status=500,
+            detail="An internal server error occurred.",
+            instance=request.url.path,
         )
         return JSONResponse(
             status_code=500,
