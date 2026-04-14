@@ -2,16 +2,56 @@
 
 from __future__ import annotations
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, EmailStr, Field, field_validator
 
 # ── Shared / Base ────────────────────────────────────────
 
 
 class ErrorResponse(BaseModel):
-    """Standard error envelope for all 4xx/5xx responses."""
+    """RFC 7807 Problem Details for HTTP APIs.
 
-    detail: str
-    code: str | None = None  # e.g. "QDRANT_UNAVAILABLE"
+    See https://datatracker.ietf.org/doc/html/rfc7807
+    """
+
+    type: str = Field(
+        default="about:blank",
+        description="A URI reference identifying the problem type.",
+    )
+    title: str = Field(
+        ...,
+        description="A short, human-readable summary of the problem type.",
+    )
+    status: int = Field(
+        ...,
+        description="The HTTP status code for this occurrence of the problem.",
+    )
+    detail: str = Field(
+        ...,
+        description="A human-readable explanation specific to this occurrence.",
+    )
+    instance: str = Field(
+        default="",
+        description="A URI reference that identifies the specific occurrence.",
+    )
+
+
+# ── Auth ─────────────────────────────────────────────────
+
+
+class LoginRequest(BaseModel):
+    """Request payload for SIAKAD authentication."""
+
+    email: EmailStr = Field(..., max_length=255)
+    password: str = Field(..., min_length=6, max_length=128)
+
+
+class LoginResponse(BaseModel):
+    """Response payload after successful SIAKAD authentication."""
+
+    session_id: str
+    student_access_token: str
+    status: str
+    message: str
 
 
 # ── Chat ────────────────────────────────────────────────
@@ -82,3 +122,17 @@ class HealthResponse(BaseModel):
     status: str = "healthy"
     qdrant: str = "unknown"
     redis: str = "unknown"
+
+
+__all__ = [
+    "ChatHistoryItem",
+    "ChatHistoryResponse",
+    "ChatRequest",
+    "ChatResponse",
+    "ErrorResponse",
+    "HealthResponse",
+    "IngestResponse",
+    "LoginRequest",
+    "LoginResponse",
+    "SourceChunk",
+]

@@ -16,6 +16,21 @@ def anyio_backend():
     return "asyncio"
 
 
+def _assert_rfc7807(data: dict, status_code: int, expected_title: str) -> None:
+    """Assert that the response follows RFC 7807 Problem Details format."""
+    assert "type" in data, "RFC 7807 requires a 'type' field"
+    assert "title" in data, "RFC 7807 requires a 'title' field"
+    assert "status" in data, "RFC 7807 requires a 'status' field"
+    assert "detail" in data, "RFC 7807 requires a 'detail' field"
+    assert "instance" in data, "RFC 7807 requires an 'instance' field"
+
+    assert data["status"] == status_code
+    assert data["title"] == expected_title
+
+
+# ── Health ──────────────────────────────────────────────
+
+
 @pytest.mark.asyncio
 async def test_health_healthy():
     """Health endpoint returns healthy when both services are up."""
@@ -23,12 +38,10 @@ async def test_health_healthy():
         patch("app.services.vectorstore.get_qdrant_client") as mock_qdrant,
         patch("app.services.memory.get_redis") as mock_redis,
     ):
-        # Mock Qdrant
         mock_client = AsyncMock()
         mock_client.get_collections.return_value = AsyncMock(collections=[])
         mock_qdrant.return_value = mock_client
 
-        # Mock Redis
         mock_r = AsyncMock()
         mock_r.ping.return_value = True
         mock_redis.return_value = mock_r
@@ -67,6 +80,9 @@ async def test_health_degraded_redis():
         assert data["redis"] == "disconnected"
 
 
+# ── Chat ────────────────────────────────────────────────
+
+
 @pytest.mark.asyncio
 async def test_chat_endpoint():
     """Chat endpoint invokes the graph and returns a response."""
@@ -83,7 +99,7 @@ async def test_chat_endpoint():
         ],
     }
 
-    with patch("app.api.chat._get_graph") as mock_get_graph:
+    with patch("app.api.routers.chat._get_graph") as mock_get_graph:
         mock_graph = AsyncMock()
         mock_graph.ainvoke.return_value = mock_result
         mock_get_graph.return_value = mock_graph
@@ -97,8 +113,8 @@ async def test_chat_endpoint():
 
         assert response.status_code == 200
         data = response.json()
-        assert len(data["session_id"]) > 10  # A UUID string
-        assert data["session_id"] != "test-123"  # Because test-123 is invalid UUID4
+        assert len(data["session_id"]) > 10
+        assert data["session_id"] != "test-123"
         assert "register" in data["answer"].lower()
         assert len(data["sources"]) == 1
         assert data["sources"][0]["filename"] == "enrollment.pdf"
@@ -108,17 +124,21 @@ async def test_chat_endpoint():
 
 @pytest.mark.asyncio
 async def test_chat_invalid_message():
-    """Chat endpoint rejects requests with empty message."""
+    """Chat endpoint rejects empty messages with RFC 7807 error."""
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://test") as client:
         response = await client.post("/chat", json={"message": ""})
 
-    assert response.status_code == 422  # Validation error
+    assert response.status_code == 422
+    _assert_rfc7807(response.json(), 422, "Validation Error")
+
+
+# ── Ingestion ───────────────────────────────────────────
 
 
 @pytest.mark.asyncio
 async def test_ingest_unsupported_file():
-    """Ingest endpoint rejects unsupported file types."""
+    """Ingest endpoint rejects unsupported file types with RFC 7807 error."""
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://test") as client:
         response = await client.post(
@@ -127,10 +147,12 @@ async def test_ingest_unsupported_file():
         )
 
     assert response.status_code == 422
+    _assert_rfc7807(response.json(), 422, "Validation Error")
 
 
 @pytest.mark.asyncio
 async def test_ingest_rejects_file_over_size_limit():
+    """Ingest endpoint rejects oversized files with RFC 7807 error."""
     fake_settings = SimpleNamespace(
         app_env="development",
         ingest_api_key=None,
@@ -139,7 +161,7 @@ async def test_ingest_rejects_file_over_size_limit():
         ingest_max_upload_mb=1,
     )
 
-    with patch("app.api.ingest.get_settings", return_value=fake_settings):
+    with patch("app.api.routers.ingestion.get_settings", return_value=fake_settings):
         transport = ASGITransport(app=app)
         async with AsyncClient(transport=transport, base_url="http://test") as client:
             response = await client.post(
@@ -148,3 +170,4 @@ async def test_ingest_rejects_file_over_size_limit():
             )
 
     assert response.status_code == 413
+    _assert_rfc7807(response.json(), 413, "Payload Too Large")
