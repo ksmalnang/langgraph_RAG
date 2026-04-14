@@ -47,6 +47,8 @@ class Settings(BaseSettings):
 
     # ── App ─────────────────────────────────────────────
     log_level: str = "INFO"
+    log_format: str = "json"  # "json" for RFC 5424, "text" for human-readable
+    app_name: str = "langgraph-agent-ai"
     app_env: str = "development"
     cors_allow_origins: str = ""
     ingest_api_key: str | None = None
