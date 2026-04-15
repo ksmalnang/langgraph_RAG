@@ -6,13 +6,17 @@ from pathlib import Path
 import shutil
 import tempfile
 
-from fastapi import APIRouter, Header, Request, UploadFile
+from fastapi import APIRouter, Header, Query, Request, UploadFile
 
 from app.api.models import (
+    ChunkEntry,
+    ChunkListResponse,
     FileDeleteRequest,
     FileDeleteResponse,
     FileEntry,
     FileListResponse,
+    FileRenameRequest,
+    FileRenameResponse,
     IngestResponse,
 )
 from app.config import get_settings
@@ -167,6 +171,80 @@ async def delete_file(body: FileDeleteRequest) -> FileDeleteResponse:
         deleted_chunks=result["deleted_chunks"],
         deleted=True,
         message="File and all associated chunks deleted successfully",
+    )
+
+
+@router.get("/ingest/by-file/chunks", response_model=ChunkListResponse)
+async def list_chunks(
+    doc_id: str = Query(..., description="Document ID to list chunks for"),
+) -> ChunkListResponse:
+    """List all chunks for an ingested file, sorted by chunk_index."""
+    points = await vs.scroll_chunks_by_doc_id(doc_id)
+
+    if not points:
+        raise AppError(
+            detail=f"File with doc_id='{doc_id}' not found.",
+            status_code=404,
+            title="Not Found",
+        )
+
+    chunks: list[ChunkEntry] = []
+    filename = ""
+    for point in points:
+        p = point.payload or {}
+        filename = p.get("filename", "")
+        chunks.append(
+            ChunkEntry(
+                chunk_id=str(point.id),
+                chunk_index=p["chunk_index"],
+                page=p.get("page"),
+                headings=p.get("headings", []),
+                content_type=p.get("content_type", "text"),
+                doc_category=p.get("doc_category"),
+                academic_year=p.get("academic_year"),
+                text=p["text"],
+                enriched_text=p.get("enriched_text"),
+            )
+        )
+
+    return ChunkListResponse(
+        doc_id=doc_id,
+        filename=filename,
+        total_chunks=len(chunks),
+        chunks=chunks,
+    )
+
+
+@router.patch("/ingest/files", response_model=FileRenameResponse)
+async def rename_file(body: FileRenameRequest) -> FileRenameResponse:
+    """Rename an ingested file by updating its filename payload."""
+    # Check for filename collision with another doc_id
+    existing_files = await vs.list_files()
+    for f in existing_files:
+        if f["filename"] == body.filename and f["doc_id"] != body.doc_id:
+            raise AppError(
+                detail=f"Filename '{body.filename}' is already used by doc_id='{f['doc_id']}'.",
+                status_code=409,
+                title="Conflict",
+            )
+
+    try:
+        result = await vs.rename_file(body.doc_id, body.filename)
+    except VectorStoreError as exc:
+        if "not found" in str(exc).lower():
+            raise AppError(
+                detail=f"File with doc_id='{body.doc_id}' not found.",
+                status_code=404,
+                title="Not Found",
+            ) from exc
+        raise
+
+    return FileRenameResponse(
+        doc_id=result["doc_id"],
+        filename=result["filename"],
+        updated_chunks=result["updated_chunks"],
+        updated=True,
+        message="Filename updated successfully",
     )
 
 

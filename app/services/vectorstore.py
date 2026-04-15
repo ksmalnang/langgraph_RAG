@@ -424,6 +424,171 @@ async def delete_file(doc_id: str) -> dict[str, Any]:
     }
 
 
+async def scroll_chunks_by_doc_id(doc_id: str) -> list[dict[str, Any]]:
+    """Scroll all chunks for a given ``doc_id``, handling full pagination.
+
+    Uses Qdrant scroll with offset-based pagination until ``next_offset`` is
+    ``None``. Returns all points sorted by ``chunk_index``.
+
+    Raises:
+        VectorStoreError: If the query fails.
+    """
+    settings = get_settings()
+    client = await get_qdrant_client()
+
+    scroll_filter = models.Filter(
+        must=[
+            models.FieldCondition(
+                key="doc_id",
+                match=models.MatchValue(value=doc_id),
+            )
+        ]
+    )
+
+    all_points: list[models.Record] = []
+    offset = None
+
+    start_ms = now_ms()
+    try:
+        while True:
+            results, next_offset = await client.scroll(
+                collection_name=settings.collection_name,
+                scroll_filter=scroll_filter,
+                limit=100,
+                offset=offset,
+                with_payload=True,
+                with_vectors=False,
+            )
+            all_points.extend(results)
+            if next_offset is None:
+                break
+            offset = next_offset
+    except Exception as exc:
+        logger.error(
+            "Dependency failure dependency=qdrant operation=scroll_chunks mode=unexpected doc_id=%s latency_ms=%.1f",
+            doc_id,
+            elapsed_ms(start_ms),
+            exc_info=True,
+        )
+        raise VectorStoreError("Failed to retrieve chunks from Qdrant") from exc
+
+    # Sort by chunk_index for stable ordering
+    def _chunk_index(point: models.Record) -> int:
+        payload = point.payload or {}
+        return payload.get("chunk_index", 0)
+
+    all_points.sort(key=_chunk_index)
+
+    logger.info("Scrolled %d chunks for doc_id=%s", len(all_points), doc_id)
+    return all_points
+
+
+async def rename_file(doc_id: str, new_filename: str) -> dict[str, Any]:
+    """Update the filename payload across all chunks for a given ``doc_id``.
+
+    Uses Qdrant ``set_payload`` with a filter to update all matching points
+    in a single call. Returns the count of updated chunks.
+
+    Raises:
+        VectorStoreError: If the doc_id is not found or the operation fails.
+    """
+    settings = get_settings()
+    client = await get_qdrant_client()
+
+    # Step 1: Count existing chunks to return in response
+    start_ms = now_ms()
+    try:
+        points, _next_offset = await client.scroll(
+            collection_name=settings.collection_name,
+            scroll_filter=models.Filter(
+                must=[
+                    models.FieldCondition(
+                        key="doc_id",
+                        match=models.MatchValue(value=doc_id),
+                    )
+                ]
+            ),
+            limit=1,
+            with_payload=False,
+            with_vectors=False,
+        )
+    except Exception as exc:
+        logger.error(
+            "Dependency failure dependency=qdrant operation=scroll_rename mode=unexpected doc_id=%s latency_ms=%.1f",
+            doc_id,
+            elapsed_ms(start_ms),
+            exc_info=True,
+        )
+        raise VectorStoreError("Failed to query file before rename") from exc
+
+    if len(points) == 0:
+        raise VectorStoreError(f"File with doc_id='{doc_id}' not found")
+
+    # Step 2: Count total chunks for this doc_id
+    start_ms = now_ms()
+    try:
+        count_result = await client.count(
+            collection_name=settings.collection_name,
+            count_filter=models.Filter(
+                must=[
+                    models.FieldCondition(
+                        key="doc_id",
+                        match=models.MatchValue(value=doc_id),
+                    )
+                ]
+            ),
+            exact=True,
+        )
+    except Exception as exc:
+        logger.error(
+            "Dependency failure dependency=qdrant operation=count_rename mode=unexpected doc_id=%s latency_ms=%.1f",
+            doc_id,
+            elapsed_ms(start_ms),
+            exc_info=True,
+        )
+        raise VectorStoreError("Failed to count chunks before rename") from exc
+
+    chunk_count = count_result.count
+
+    # Step 3: Apply set_payload with filter
+    points_filter = models.Filter(
+        must=[
+            models.FieldCondition(
+                key="doc_id",
+                match=models.MatchValue(value=doc_id),
+            )
+        ]
+    )
+
+    start_ms = now_ms()
+    try:
+        await client.set_payload(
+            collection_name=settings.collection_name,
+            payload={"filename": new_filename},
+            points=points_filter,
+        )
+    except Exception as exc:
+        logger.error(
+            "Dependency failure dependency=qdrant operation=set_payload_rename mode=unexpected doc_id=%s latency_ms=%.1f",
+            doc_id,
+            elapsed_ms(start_ms),
+            exc_info=True,
+        )
+        raise VectorStoreError("Failed to update filename in Qdrant") from exc
+
+    logger.info(
+        "Renamed file doc_id=%s to '%s' across %d chunks",
+        doc_id,
+        new_filename,
+        chunk_count,
+    )
+    return {
+        "doc_id": doc_id,
+        "filename": new_filename,
+        "updated_chunks": chunk_count,
+    }
+
+
 async def close_client() -> None:
     """Close the Qdrant client."""
     global _client

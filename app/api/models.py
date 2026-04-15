@@ -141,6 +141,46 @@ class FileDeleteResponse(BaseModel):
     message: str = "File and all associated chunks deleted successfully"
 
 
+class ChunkEntry(BaseModel):
+    """Represents a single chunk from an ingested file."""
+
+    chunk_id: str
+    chunk_index: int
+    page: int | None = None
+    headings: list[str] = Field(default_factory=list)
+    content_type: str = "text"
+    doc_category: str | None = None
+    academic_year: str | None = None
+    text: str
+    enriched_text: str | None = None
+
+
+class ChunkListResponse(BaseModel):
+    """Response payload for listing chunks of an ingested file."""
+
+    doc_id: str
+    filename: str
+    total_chunks: int
+    chunks: list[ChunkEntry]
+
+
+class FileRenameRequest(BaseModel):
+    """Request payload for renaming an ingested file."""
+
+    doc_id: str = Field(..., description="Document ID to rename")
+    filename: str = Field(..., min_length=1, description="New filename")
+
+
+class FileRenameResponse(BaseModel):
+    """Response payload after renaming an ingested file."""
+
+    doc_id: str
+    filename: str
+    updated_chunks: int
+    updated: bool
+    message: str = "Filename updated successfully"
+
+
 class IngestResponse(BaseModel):
     doc_id: str
     filename: str
@@ -165,11 +205,15 @@ __all__ = [
     "ChatHistoryResponse",
     "ChatRequest",
     "ChatResponse",
+    "ChunkEntry",
+    "ChunkListResponse",
     "ErrorResponse",
     "FileDeleteRequest",
     "FileDeleteResponse",
     "FileEntry",
     "FileListResponse",
+    "FileRenameRequest",
+    "FileRenameResponse",
     "HealthResponse",
     "IngestResponse",
     "LoginRequest",
