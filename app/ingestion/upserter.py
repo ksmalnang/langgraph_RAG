@@ -2,12 +2,11 @@
 
 from __future__ import annotations
 
-import uuid
-
 from app.ingestion.chunker import Chunk
 from app.ingestion.metadata import extract_doc_metadata
 from app.services import embeddings as embed_svc
 from app.services import vectorstore as vs
+from app.utils.helpers import generate_chunk_point_id
 from app.utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -31,11 +30,6 @@ def _enrich_text(chunk: Chunk) -> str:
         if last_heading:
             return f"[{last_heading}]\n{chunk.text}"
     return chunk.text
-
-
-def generate_point_id() -> str:
-    """Generate a unique point ID for Qdrant."""
-    return str(uuid.uuid4())
 
 
 async def upsert_chunks(
@@ -79,7 +73,7 @@ async def upsert_chunks(
             collection_prepared = True
 
         # Build point data — keep original text for display, enriched for BM25
-        ids = [generate_point_id() for _ in batch]
+        ids = [generate_chunk_point_id(doc_id, c.chunk_index) for c in batch]
         payloads = [
             {
                 "text": c.text,

@@ -13,9 +13,9 @@ def generate_doc_id(filename: str) -> str:
 
 
 def generate_chunk_point_id(doc_id: str, chunk_index: int) -> str:
-    """Deterministic chunk point ID from document identity + chunk index."""
+    """Generate a deterministic UUID from document identity + chunk index."""
     raw = f"{doc_id}:{chunk_index}"
-    return hashlib.sha256(raw.encode()).hexdigest()[:24]
+    return str(uuid.uuid5(uuid.NAMESPACE_DNS, raw))
 
 
 def generate_point_id() -> str:
