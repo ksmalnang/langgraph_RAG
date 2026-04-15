@@ -108,6 +108,23 @@ class ChatHistoryResponse(BaseModel):
 # ── Ingest ──────────────────────────────────────────────
 
 
+class FileEntry(BaseModel):
+    """Represents a single ingested file in the listing."""
+
+    doc_id: str
+    filename: str
+    doc_category: str | None = None
+    academic_year: str | None = None
+    total_chunks: int
+
+
+class FileListResponse(BaseModel):
+    """Response payload for listing ingested files."""
+
+    total_files: int
+    files: list[FileEntry]
+
+
 class IngestResponse(BaseModel):
     doc_id: str
     filename: str
@@ -133,6 +150,8 @@ __all__ = [
     "ChatRequest",
     "ChatResponse",
     "ErrorResponse",
+    "FileEntry",
+    "FileListResponse",
     "HealthResponse",
     "IngestResponse",
     "LoginRequest",

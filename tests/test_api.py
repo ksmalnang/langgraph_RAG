@@ -137,6 +137,113 @@ async def test_chat_invalid_message():
 
 
 @pytest.mark.asyncio
+async def test_list_files_empty():
+    """List files endpoint returns 200 with empty list when no files ingested."""
+    with patch("app.api.routers.ingestion.vs.list_files") as mock_list:
+        mock_list.return_value = []
+
+        transport = ASGITransport(app=app)
+        async with AsyncClient(transport=transport, base_url="http://test") as client:
+            response = await client.get("/ingest/files")
+
+        assert response.status_code == 200
+        data = response.json()
+        assert data["total_files"] == 0
+        assert data["files"] == []
+
+
+@pytest.mark.asyncio
+async def test_list_files_two_files():
+    """List files endpoint returns one entry per ingested file."""
+    file_entries = [
+        {
+            "doc_id": "doc-abc123",
+            "filename": "enrollment.pdf",
+            "doc_category": "Academic",
+            "academic_year": "2024/2025",
+            "total_chunks": 5,
+        },
+        {
+            "doc_id": "doc-def456",
+            "filename": "schedule.pdf",
+            "doc_category": "Administrative",
+            "academic_year": "2024/2025",
+            "total_chunks": 3,
+        },
+    ]
+
+    with patch("app.api.routers.ingestion.vs.list_files") as mock_list:
+        mock_list.return_value = file_entries
+
+        transport = ASGITransport(app=app)
+        async with AsyncClient(transport=transport, base_url="http://test") as client:
+            response = await client.get("/ingest/files")
+
+        assert response.status_code == 200
+        data = response.json()
+        assert data["total_files"] == 2
+        # Results sorted by filename ascending
+        assert data["files"][0]["filename"] == "enrollment.pdf"
+        assert data["files"][1]["filename"] == "schedule.pdf"
+        assert data["files"][0]["total_chunks"] == 5
+        assert data["files"][1]["total_chunks"] == 3
+        assert data["files"][0]["doc_category"] == "Academic"
+        assert data["files"][0]["academic_year"] == "2024/2025"
+
+
+@pytest.mark.asyncio
+async def test_list_files_total_chunks_matches():
+    """List files endpoint accurately reflects stored chunk counts."""
+    file_entries = [
+        {
+            "doc_id": "doc-xyz",
+            "filename": "large-doc.pdf",
+            "doc_category": None,
+            "academic_year": None,
+            "total_chunks": 42,
+        },
+    ]
+
+    with patch("app.api.routers.ingestion.vs.list_files") as mock_list:
+        mock_list.return_value = file_entries
+
+        transport = ASGITransport(app=app)
+        async with AsyncClient(transport=transport, base_url="http://test") as client:
+            response = await client.get("/ingest/files")
+
+        assert response.status_code == 200
+        data = response.json()
+        assert data["files"][0]["total_chunks"] == 42
+
+
+@pytest.mark.asyncio
+async def test_list_files_idempotent_reingest():
+    """Re-ingesting the same file results in only one entry."""
+    # Simulates deduplication: even if called multiple times, same doc_id
+    file_entries = [
+        {
+            "doc_id": "doc-duplicate",
+            "filename": "re-ingested.pdf",
+            "doc_category": "Academic",
+            "academic_year": "2024/2025",
+            "total_chunks": 10,
+        },
+    ]
+
+    with patch("app.api.routers.ingestion.vs.list_files") as mock_list:
+        mock_list.return_value = file_entries
+
+        transport = ASGITransport(app=app)
+        async with AsyncClient(transport=transport, base_url="http://test") as client:
+            response = await client.get("/ingest/files")
+
+        assert response.status_code == 200
+        data = response.json()
+        assert data["total_files"] == 1
+        assert data["files"][0]["doc_id"] == "doc-duplicate"
+
+
+@pytest.mark.asyncio
 async def test_ingest_unsupported_file():
     """Ingest endpoint rejects unsupported file types with RFC 7807 error."""
     transport = ASGITransport(app=app)

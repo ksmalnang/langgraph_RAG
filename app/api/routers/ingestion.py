@@ -8,9 +8,10 @@ import tempfile
 
 from fastapi import APIRouter, Header, Request, UploadFile
 
-from app.api.models import IngestResponse
+from app.api.models import FileEntry, FileListResponse, IngestResponse
 from app.config import get_settings
 from app.ingestion.pipeline import ingest_document
+from app.services import vectorstore as vs
 from app.services.rate_limiter import allow_request
 from app.utils.exceptions import AppError
 from app.utils.logger import get_logger
@@ -127,6 +128,17 @@ async def _check_rate_limit(client_ip: str, settings: object) -> None:
 # ---------------------------------------------------------------------------
 # Endpoint
 # ---------------------------------------------------------------------------
+
+
+@router.get("/ingest/files", response_model=FileListResponse)
+async def list_files() -> FileListResponse:
+    """List all ingested files with their chunk counts."""
+    raw_files = await vs.list_files()
+    entries = [FileEntry(**f) for f in raw_files]
+    return FileListResponse(
+        total_files=len(entries),
+        files=entries,
+    )
 
 
 @router.post("/ingest", response_model=IngestResponse)

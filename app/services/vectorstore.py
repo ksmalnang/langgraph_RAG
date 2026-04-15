@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections import defaultdict
 from typing import Any
 
 from fastembed import SparseTextEmbedding
@@ -271,6 +272,76 @@ async def hybrid_search(
 
     logger.debug("Hybrid search returned %d results", len(docs))
     return docs
+
+
+async def list_files() -> list[dict[str, Any]]:
+    """List all unique ingested files with their chunk counts.
+
+    Scrolls all points in the collection, deduplicates by ``doc_id``,
+    and returns one entry per file with metadata extracted from chunk payloads.
+
+    Returns a list of dicts sorted by filename ascending, each containing:
+    - doc_id
+    - filename
+    - doc_category
+    - academic_year
+    - total_chunks
+    """
+    settings = get_settings()
+    client = await get_qdrant_client()
+
+    # Scroll all points — Option A (dev/small scale)
+    # Using a large enough limit to fetch everything in one go
+    start_ms = now_ms()
+    try:
+        points, _next_offset = await client.scroll(
+            collection_name=settings.collection_name,
+            limit=100_000,
+            with_payload=True,
+        )
+    except Exception as exc:
+        logger.error(
+            "Dependency failure dependency=qdrant operation=scroll mode=unexpected latency_ms=%.1f",
+            elapsed_ms(start_ms),
+            exc_info=True,
+        )
+        raise VectorStoreError("Failed to list files from Qdrant") from exc
+
+    # Deduplicate by doc_id and count chunks per doc_id
+    doc_map: dict[str, dict[str, Any]] = {}
+    chunk_counts: dict[str, int] = defaultdict(int)
+
+    for point in points:
+        payload = point.payload or {}
+        doc_id = payload.get("doc_id")
+        if doc_id is None:
+            continue
+
+        chunk_counts[doc_id] += 1
+
+        if doc_id not in doc_map:
+            doc_map[doc_id] = {
+                "doc_id": doc_id,
+                "filename": payload.get("filename", ""),
+                "doc_category": payload.get("doc_category"),
+                "academic_year": payload.get("academic_year"),
+            }
+
+    # Build the result with total_chunks
+    files = []
+    for doc_id, meta in doc_map.items():
+        files.append(
+            {
+                **meta,
+                "total_chunks": chunk_counts[doc_id],
+            }
+        )
+
+    # Sort by filename ascending for stable ordering
+    files.sort(key=lambda f: f["filename"])
+
+    logger.info("Listed %d unique files from Qdrant", len(files))
+    return files
 
 
 async def close_client() -> None:
