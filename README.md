@@ -62,6 +62,7 @@ cp .env.example .env
 # Edit .env with your API keys:
 #   OPENROUTER_API_KEY=sk-or-v1-...
 #   JINA_API_KEY=jina_...
+#   TELEGRAM_BOT_TOKEN=12345:ABC... (Optional, for Telegram bot)
 ```
 
 ### 4. Start Dependencies
@@ -86,11 +87,17 @@ docker compose up --build
 
 ## API Endpoints
 
-| Method | Path      | Description                          |
-|--------|-----------|--------------------------------------|
-| GET    | `/health` | Service health check (Qdrant+Redis)  |
-| POST   | `/ingest` | Upload & process admin documents     |
-| POST   | `/chat`   | Send message, get answer             |
+| Method | Path                           | Description                                     |
+|--------|--------------------------------|-------------------------------------------------|
+| GET    | `/health`                      | Service health check (Qdrant+Redis)             |
+| POST   | `/chat`                        | Send message, get answer                        |
+| POST   | `/ingest`                      | Upload & process admin documents                |
+| POST   | `/ingest/by-file/chunks`       | Add a new chunk manually                        |
+| PATCH  | `/ingest/by-file/chunks`       | Update an existing chunk                        |
+| DELETE | `/ingest/by-file/chunks`       | Delete a specific chunk                         |
+| POST   | `/telegram/setup`              | Set up Telegram webhook                         |
+| POST   | `/telegram/webhook/{secret}`   | Telegram webhook receiver (called by Telegram)  |
+| POST   | `/telegram/teardown`           | Remove Telegram webhook                         |
 
 ### POST /ingest
 
@@ -107,6 +114,14 @@ curl -X POST http://localhost:8000/chat \
   -d '{"session_id": "user-123", "message": "How do I register for next semester?"}'
 ```
 
+### POST /telegram/setup
+
+```bash
+curl -X POST http://localhost:8000/telegram/setup \
+  -H "Content-Type: application/json" \
+  -d '{"webhook_url": "https://your-domain.com/telegram/webhook/your-secret"}'
+```
+
 ## Project Structure
 
 ```
@@ -114,11 +129,14 @@ langgraph_agent_ai/
 ├── app/
 │   ├── main.py              # FastAPI app, middleware, lifespan
 │   ├── config.py            # Pydantic Settings
-│   ├── schemas.py           # Request/response models
-│   ├── api/                 # API endpoints
-│   │   ├── health.py        # GET /health
-│   │   ├── ingest.py        # POST /ingest
-│   │   └── chat.py          # POST /chat
+│   ├── api/                 # API endpoints & schemas
+│   │   ├── models.py        # Request/response Pydantic models
+│   │   └── routers/         # Route definitions
+│   │       ├── auth.py      # Authentication routes
+│   │       ├── health.py    # GET /health
+│   │       ├── ingestion.py # Document processing & chunk CRUD
+│   │       ├── chat.py      # POST /chat
+│   │       └── telegram.py  # Telegram webhook integration
 │   ├── agent/               # LangGraph Agent
 │   │   ├── state.py         # AgentState definition
 │   │   ├── graph.py         # StateGraph construction
