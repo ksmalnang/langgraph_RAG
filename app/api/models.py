@@ -308,4 +308,66 @@ __all__ = [
     "LoginRequest",
     "LoginResponse",
     "SourceChunk",
+    # ── Telegram ──
+    "TelegramChat",
+    "TelegramMessage",
+    "TelegramUpdate",
+    "WebhookSetupRequest",
 ]
+
+
+# ── Telegram ─────────────────────────────────────────────
+
+
+class TelegramChat(BaseModel):
+    """Represents the Telegram chat object inside a message."""
+
+    id: int = Field(..., description="Unique 64-bit identifier for this chat")
+    type: str = Field(
+        ...,
+        description="Type of chat: private, group, supergroup, or channel",
+    )
+    first_name: str | None = None
+    last_name: str | None = None
+    username: str | None = None
+    title: str | None = None
+
+
+class TelegramMessage(BaseModel):
+    """Represents an incoming Telegram message.
+
+    Only ``text`` is used for AI processing; all other media types are
+    intentionally ignored (stickers, photos, documents, etc.).
+    """
+
+    message_id: int
+    chat: TelegramChat
+    date: int = Field(..., description="Unix timestamp of the message")
+    text: str | None = Field(
+        default=None,
+        description="Text content of the message; None for non-text updates",
+    )
+
+
+class TelegramUpdate(BaseModel):
+    """Top-level Telegram Update object POSTed by Telegram servers.
+
+    Non-text updates (stickers, photos, voice, etc.) result in a
+    ``TelegramUpdate`` where ``message.text`` is ``None``; those are
+    silently acknowledged and dropped by the webhook handler.
+    """
+
+    update_id: int = Field(..., description="Unique sequential update identifier")
+    message: TelegramMessage | None = None
+
+
+class WebhookSetupRequest(BaseModel):
+    """Request body for ``POST /telegram/setup`` — binds a public URL."""
+
+    url: str = Field(
+        ...,
+        description=(
+            "The public HTTPS URL Telegram should POST updates to, "
+            "e.g. 'https://abc123.ngrok.io'"
+        ),
+    )

@@ -45,6 +45,9 @@ class Settings(BaseSettings):
     # ── Chunking ────────────────────────────────────────
     chunk_max_tokens: int = 512
 
+    # ── Telegram ────────────────────────────────────────
+    telegram_bot_token: str | None = None
+
     # ── App ─────────────────────────────────────────────
     log_level: str = "INFO"
     log_format: str = "json"  # "json" for RFC 5424, "text" for human-readable
