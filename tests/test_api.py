@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from types import SimpleNamespace
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 from httpx import ASGITransport, AsyncClient
 import pytest
@@ -653,3 +653,763 @@ async def test_ingest_rejects_file_over_size_limit():
 
     assert response.status_code == 413
     _assert_rfc7807(response.json(), 413, "Payload Too Large")
+
+
+# ── Chunk Create (Issue 2) ──────────────────────────────
+
+
+@pytest.mark.asyncio
+async def test_create_chunk_success():
+    """Create chunk endpoint injects a new chunk and returns success."""
+    from app.utils.helpers import generate_chunk_point_id
+
+    fake_points = [
+        _FakePoint(
+            point_id="chunk-001",
+            payload={
+                "chunk_index": 0,
+                "filename": "test.pdf",
+                "text": "existing chunk",
+                "doc_category": "guide",
+                "academic_year": "2024/2025",
+            },
+        ),
+    ]
+
+    chunk_id = generate_chunk_point_id("doc-test", 22)
+
+    with (
+        patch("app.api.routers.ingestion.vs.scroll_chunks_by_doc_id", new_callable=AsyncMock) as mock_scroll,
+        patch("app.api.routers.ingestion.embed_svc.embed_query", new_callable=AsyncMock) as mock_embed,
+        patch("app.api.routers.ingestion.vs._encode_sparse") as mock_sparse,
+        patch("app.api.routers.ingestion.vs.upsert_single_chunk", new_callable=AsyncMock) as mock_upsert,
+    ):
+        mock_scroll.return_value = fake_points
+        mock_embed.return_value = [0.1, 0.2, 0.3]
+        mock_sparse.return_value = [MagicMock()]
+        mock_upsert.return_value = None
+
+        transport = ASGITransport(app=app)
+        async with AsyncClient(transport=transport, base_url="http://test") as client:
+            response = await client.post(
+                "/ingest/by-file/chunks",
+                json={
+                    "doc_id": "doc-test",
+                    "text": "Injected chunk text",
+                    "chunk_index": 22,
+                    "page": 5,
+                    "headings": ["Section Title"],
+                    "content_type": "text",
+                },
+            )
+
+    assert response.status_code == 200
+    data = response.json()
+    assert data["doc_id"] == "doc-test"
+    assert data["filename"] == "test.pdf"
+    assert data["chunk_index"] == 22
+    assert data["chunk_id"] == chunk_id
+    assert data["created"] is True
+    assert data["message"] == "Chunk injected successfully"
+
+
+@pytest.mark.asyncio
+async def test_create_chunk_inherits_doc_category():
+    """Create chunk inherits doc_category from existing file when not provided."""
+    fake_points = [
+        _FakePoint(
+            point_id="chunk-001",
+            payload={
+                "chunk_index": 0,
+                "filename": "test.pdf",
+                "text": "existing chunk",
+                "doc_category": "handbook",
+                "academic_year": "2023/2024",
+            },
+        ),
+    ]
+
+    with (
+        patch("app.api.routers.ingestion.vs.scroll_chunks_by_doc_id", new_callable=AsyncMock) as mock_scroll,
+        patch("app.api.routers.ingestion.embed_svc.embed_query", new_callable=AsyncMock) as mock_embed,
+        patch("app.api.routers.ingestion.vs._encode_sparse") as mock_sparse,
+        patch("app.api.routers.ingestion.vs.upsert_single_chunk", new_callable=AsyncMock) as mock_upsert,
+    ):
+        mock_scroll.return_value = fake_points
+        mock_embed.return_value = [0.1, 0.2, 0.3]
+        mock_sparse.return_value = [MagicMock()]
+        mock_upsert.return_value = None
+
+        transport = ASGITransport(app=app)
+        async with AsyncClient(transport=transport, base_url="http://test") as client:
+            response = await client.post(
+                "/ingest/by-file/chunks",
+                json={
+                    "doc_id": "doc-test",
+                    "text": "Injected chunk text",
+                    "chunk_index": 22,
+                },
+            )
+
+    assert response.status_code == 200
+    call_args = mock_upsert.call_args
+    payload = call_args.args[3]
+    assert payload["doc_category"] == "handbook"
+    assert payload["academic_year"] == "2023/2024"
+
+
+@pytest.mark.asyncio
+async def test_create_chunk_enriched_text_with_headings():
+    """Create chunk generates enriched_text with headings prepended."""
+    fake_points = [
+        _FakePoint(
+            point_id="chunk-001",
+            payload={
+                "chunk_index": 0,
+                "filename": "test.pdf",
+                "text": "existing",
+            },
+        ),
+    ]
+
+    with (
+        patch("app.api.routers.ingestion.vs.scroll_chunks_by_doc_id", new_callable=AsyncMock) as mock_scroll,
+        patch("app.api.routers.ingestion.embed_svc.embed_query", new_callable=AsyncMock) as mock_embed,
+        patch("app.api.routers.ingestion.vs._encode_sparse") as mock_sparse,
+        patch("app.api.routers.ingestion.vs.upsert_single_chunk", new_callable=AsyncMock) as mock_upsert,
+    ):
+        mock_scroll.return_value = fake_points
+        mock_embed.return_value = [0.1, 0.2, 0.3]
+        mock_sparse.return_value = [MagicMock()]
+        mock_upsert.return_value = None
+
+        transport = ASGITransport(app=app)
+        async with AsyncClient(transport=transport, base_url="http://test") as client:
+            await client.post(
+                "/ingest/by-file/chunks",
+                json={
+                    "doc_id": "doc-test",
+                    "text": "Chunk content",
+                    "chunk_index": 5,
+                    "headings": ["Rules Section"],
+                },
+            )
+
+    call_kwargs = mock_embed.call_args
+    enriched = call_kwargs.args[0]
+    assert enriched == "[Rules Section]\nChunk content"
+
+
+@pytest.mark.asyncio
+async def test_create_chunk_enriched_text_without_headings():
+    """Create chunk uses raw text as enriched_text when no headings provided."""
+    fake_points = [
+        _FakePoint(
+            point_id="chunk-001",
+            payload={
+                "chunk_index": 0,
+                "filename": "test.pdf",
+                "text": "existing",
+            },
+        ),
+    ]
+
+    with (
+        patch("app.api.routers.ingestion.vs.scroll_chunks_by_doc_id", new_callable=AsyncMock) as mock_scroll,
+        patch("app.api.routers.ingestion.embed_svc.embed_query", new_callable=AsyncMock) as mock_embed,
+        patch("app.api.routers.ingestion.vs._encode_sparse") as mock_sparse,
+        patch("app.api.routers.ingestion.vs.upsert_single_chunk", new_callable=AsyncMock) as mock_upsert,
+    ):
+        mock_scroll.return_value = fake_points
+        mock_embed.return_value = [0.1, 0.2, 0.3]
+        mock_sparse.return_value = [MagicMock()]
+        mock_upsert.return_value = None
+
+        transport = ASGITransport(app=app)
+        async with AsyncClient(transport=transport, base_url="http://test") as client:
+            await client.post(
+                "/ingest/by-file/chunks",
+                json={
+                    "doc_id": "doc-test",
+                    "text": "Chunk content",
+                    "chunk_index": 5,
+                },
+            )
+
+    call_kwargs = mock_embed.call_args
+    enriched = call_kwargs.args[0]
+    assert enriched == "Chunk content"
+
+
+@pytest.mark.asyncio
+async def test_create_chunk_conflict():
+    """Create chunk returns 409 when chunk_index already exists."""
+    from app.utils.helpers import generate_chunk_point_id
+
+    chunk_id = generate_chunk_point_id("doc-test", 5)
+    fake_points = [
+        _FakePoint(
+            point_id=chunk_id,
+            payload={
+                "chunk_index": 5,
+                "filename": "test.pdf",
+                "text": "existing chunk",
+            },
+        ),
+    ]
+
+    with patch("app.api.routers.ingestion.vs.scroll_chunks_by_doc_id", new_callable=AsyncMock) as mock_scroll:
+        mock_scroll.return_value = fake_points
+
+        transport = ASGITransport(app=app)
+        async with AsyncClient(transport=transport, base_url="http://test") as client:
+            response = await client.post(
+                "/ingest/by-file/chunks",
+                json={
+                    "doc_id": "doc-test",
+                    "text": "New chunk text",
+                    "chunk_index": 5,
+                },
+            )
+
+    assert response.status_code == 409
+    data = response.json()
+    assert data["title"] == "Conflict"
+
+
+@pytest.mark.asyncio
+async def test_create_chunk_not_found():
+    """Create chunk returns 404 for unknown doc_id."""
+    with patch("app.api.routers.ingestion.vs.scroll_chunks_by_doc_id", new_callable=AsyncMock) as mock_scroll:
+        mock_scroll.return_value = []
+
+        transport = ASGITransport(app=app)
+        async with AsyncClient(transport=transport, base_url="http://test") as client:
+            response = await client.post(
+                "/ingest/by-file/chunks",
+                json={
+                    "doc_id": "unknown-doc",
+                    "text": "New chunk text",
+                    "chunk_index": 5,
+                },
+            )
+
+    assert response.status_code == 404
+    data = response.json()
+    assert data["title"] == "Not Found"
+
+
+@pytest.mark.asyncio
+async def test_create_chunk_empty_text():
+    """Create chunk returns 422 for empty text."""
+    transport = ASGITransport(app=app)
+    async with AsyncClient(transport=transport, base_url="http://test") as client:
+        response = await client.post(
+            "/ingest/by-file/chunks",
+            json={
+                "doc_id": "doc-test",
+                "text": "",
+                "chunk_index": 5,
+            },
+        )
+
+    assert response.status_code == 422
+
+
+@pytest.mark.asyncio
+async def test_create_chunk_whitespace_text():
+    """Create chunk returns 422 for whitespace-only text."""
+    transport = ASGITransport(app=app)
+    async with AsyncClient(transport=transport, base_url="http://test") as client:
+        response = await client.post(
+            "/ingest/by-file/chunks",
+            json={
+                "doc_id": "doc-test",
+                "text": "   ",
+                "chunk_index": 5,
+            },
+        )
+
+    assert response.status_code == 422
+
+
+@pytest.mark.asyncio
+async def test_create_chunk_negative_index():
+    """Create chunk returns 422 for negative chunk_index."""
+    transport = ASGITransport(app=app)
+    async with AsyncClient(transport=transport, base_url="http://test") as client:
+        response = await client.post(
+            "/ingest/by-file/chunks",
+            json={
+                "doc_id": "doc-test",
+                "text": "Valid text",
+                "chunk_index": -1,
+            },
+        )
+
+    assert response.status_code == 422
+
+
+# ── Chunk Update (Issue 3) ──────────────────────────────
+
+
+@pytest.mark.asyncio
+async def test_update_chunk_success():
+    """Update chunk endpoint overwrites text and returns success."""
+    from app.utils.helpers import generate_chunk_point_id
+
+    chunk_id = generate_chunk_point_id("doc-test", 17)
+    fake_points = [
+        _FakePoint(
+            point_id=chunk_id,
+            payload={
+                "chunk_index": 17,
+                "filename": "test.pdf",
+                "text": "old text",
+                "doc_category": "guide",
+                "academic_year": "2024/2025",
+                "headings": ["Old Heading"],
+            },
+        ),
+    ]
+
+    with (
+        patch("app.api.routers.ingestion.vs.scroll_chunks_by_doc_id", new_callable=AsyncMock) as mock_scroll,
+        patch("app.api.routers.ingestion.vs.get_chunk_by_doc_id_and_index", new_callable=AsyncMock) as mock_get,
+        patch("app.api.routers.ingestion.embed_svc.embed_query", new_callable=AsyncMock) as mock_embed,
+        patch("app.api.routers.ingestion.vs._encode_sparse") as mock_sparse,
+        patch("app.api.routers.ingestion.vs.upsert_single_chunk", new_callable=AsyncMock) as mock_upsert,
+    ):
+        mock_scroll.return_value = fake_points
+        mock_get.return_value = {"point_id": chunk_id, "payload": fake_points[0].payload}
+        mock_embed.return_value = [0.1, 0.2, 0.3]
+        mock_sparse.return_value = [MagicMock()]
+        mock_upsert.return_value = None
+
+        transport = ASGITransport(app=app)
+        async with AsyncClient(transport=transport, base_url="http://test") as client:
+            response = await client.patch(
+                "/ingest/by-file/chunks",
+                json={
+                    "doc_id": "doc-test",
+                    "chunk_index": 17,
+                    "text": "updated text content",
+                    "headings": ["Tata Tertib"],
+                    "page": 1,
+                    "content_type": "text",
+                },
+            )
+
+    assert response.status_code == 200
+    data = response.json()
+    assert data["doc_id"] == "doc-test"
+    assert data["filename"] == "test.pdf"
+    assert data["chunk_index"] == 17
+    assert data["chunk_id"] == chunk_id
+    assert data["updated"] is True
+    assert data["message"] == "Chunk updated successfully"
+
+
+@pytest.mark.asyncio
+async def test_update_chunk_preserves_unspecified_fields():
+    """Update chunk preserves doc_category and academic_year when not in request."""
+    from app.utils.helpers import generate_chunk_point_id
+
+    chunk_id = generate_chunk_point_id("doc-test", 17)
+    existing_payload = {
+        "chunk_index": 17,
+        "filename": "test.pdf",
+        "text": "old text",
+        "doc_category": "handbook",
+        "academic_year": "2023/2024",
+        "headings": ["Old Heading"],
+    }
+    fake_points = [
+        _FakePoint(point_id=chunk_id, payload=existing_payload),
+    ]
+
+    with (
+        patch("app.api.routers.ingestion.vs.scroll_chunks_by_doc_id", new_callable=AsyncMock) as mock_scroll,
+        patch("app.api.routers.ingestion.vs.get_chunk_by_doc_id_and_index", new_callable=AsyncMock) as mock_get,
+        patch("app.api.routers.ingestion.embed_svc.embed_query", new_callable=AsyncMock) as mock_embed,
+        patch("app.api.routers.ingestion.vs._encode_sparse") as mock_sparse,
+        patch("app.api.routers.ingestion.vs.upsert_single_chunk", new_callable=AsyncMock) as mock_upsert,
+    ):
+        mock_scroll.return_value = fake_points
+        mock_get.return_value = {"point_id": chunk_id, "payload": existing_payload}
+        mock_embed.return_value = [0.1, 0.2, 0.3]
+        mock_sparse.return_value = [MagicMock()]
+        mock_upsert.return_value = None
+
+        transport = ASGITransport(app=app)
+        async with AsyncClient(transport=transport, base_url="http://test") as client:
+            await client.patch(
+                "/ingest/by-file/chunks",
+                json={
+                    "doc_id": "doc-test",
+                    "chunk_index": 17,
+                    "text": "new text only",
+                },
+            )
+
+    call_args = mock_upsert.call_args
+    payload = call_args.args[3]
+    assert payload["doc_category"] == "handbook"
+    assert payload["academic_year"] == "2023/2024"
+
+
+@pytest.mark.asyncio
+async def test_update_chunk_enriched_text_regenerated():
+    """Update chunk regenerates enriched_text from new text and headings."""
+    from app.utils.helpers import generate_chunk_point_id
+
+    chunk_id = generate_chunk_point_id("doc-test", 17)
+    existing_payload = {
+        "chunk_index": 17,
+        "filename": "test.pdf",
+        "text": "old text",
+        "headings": ["Old Heading"],
+    }
+    fake_points = [
+        _FakePoint(point_id=chunk_id, payload=existing_payload),
+    ]
+
+    with (
+        patch("app.api.routers.ingestion.vs.scroll_chunks_by_doc_id", new_callable=AsyncMock) as mock_scroll,
+        patch("app.api.routers.ingestion.vs.get_chunk_by_doc_id_and_index", new_callable=AsyncMock) as mock_get,
+        patch("app.api.routers.ingestion.embed_svc.embed_query", new_callable=AsyncMock) as mock_embed,
+        patch("app.api.routers.ingestion.vs._encode_sparse") as mock_sparse,
+        patch("app.api.routers.ingestion.vs.upsert_single_chunk", new_callable=AsyncMock) as mock_upsert,
+    ):
+        mock_scroll.return_value = fake_points
+        mock_get.return_value = {"point_id": chunk_id, "payload": existing_payload}
+        mock_embed.return_value = [0.1, 0.2, 0.3]
+        mock_sparse.return_value = [MagicMock()]
+        mock_upsert.return_value = None
+
+        transport = ASGITransport(app=app)
+        async with AsyncClient(transport=transport, base_url="http://test") as client:
+            await client.patch(
+                "/ingest/by-file/chunks",
+                json={
+                    "doc_id": "doc-test",
+                    "chunk_index": 17,
+                    "text": "new text",
+                    "headings": ["New Heading"],
+                },
+            )
+
+    call_kwargs = mock_embed.call_args
+    enriched = call_kwargs.args[0]
+    assert enriched == "[New Heading]\nnew text"
+
+
+@pytest.mark.asyncio
+async def test_update_chunk_not_found_doc_id():
+    """Update chunk returns 404 for unknown doc_id."""
+    with patch("app.api.routers.ingestion.vs.scroll_chunks_by_doc_id", new_callable=AsyncMock) as mock_scroll:
+        mock_scroll.return_value = []
+
+        transport = ASGITransport(app=app)
+        async with AsyncClient(transport=transport, base_url="http://test") as client:
+            response = await client.patch(
+                "/ingest/by-file/chunks",
+                json={
+                    "doc_id": "unknown-doc",
+                    "chunk_index": 17,
+                    "text": "new text",
+                },
+            )
+
+    assert response.status_code == 404
+    data = response.json()
+    assert data["title"] == "Not Found"
+
+
+@pytest.mark.asyncio
+async def test_update_chunk_not_found_index():
+    """Update chunk returns 404 for unknown chunk_index."""
+    from app.utils.helpers import generate_chunk_point_id
+
+    fake_points = [
+        _FakePoint(
+            point_id="chunk-001",
+            payload={
+                "chunk_index": 5,
+                "filename": "test.pdf",
+                "text": "existing",
+            },
+        ),
+    ]
+
+    with (
+        patch("app.api.routers.ingestion.vs.scroll_chunks_by_doc_id", new_callable=AsyncMock) as mock_scroll,
+        patch("app.api.routers.ingestion.vs.get_chunk_by_doc_id_and_index", new_callable=AsyncMock) as mock_get,
+    ):
+        mock_scroll.return_value = fake_points
+        mock_get.return_value = None
+
+        transport = ASGITransport(app=app)
+        async with AsyncClient(transport=transport, base_url="http://test") as client:
+            response = await client.patch(
+                "/ingest/by-file/chunks",
+                json={
+                    "doc_id": "doc-test",
+                    "chunk_index": 99,
+                    "text": "new text",
+                },
+            )
+
+    assert response.status_code == 404
+    data = response.json()
+    assert data["title"] == "Not Found"
+
+
+@pytest.mark.asyncio
+async def test_update_chunk_empty_text():
+    """Update chunk returns 422 for empty text."""
+    transport = ASGITransport(app=app)
+    async with AsyncClient(transport=transport, base_url="http://test") as client:
+        response = await client.patch(
+            "/ingest/by-file/chunks",
+            json={
+                "doc_id": "doc-test",
+                "chunk_index": 17,
+                "text": "",
+            },
+        )
+
+    assert response.status_code == 422
+
+
+# ── Chunk Delete (Issue 4) ──────────────────────────────
+
+
+@pytest.mark.asyncio
+async def test_delete_chunk_success():
+    """Delete chunk endpoint removes a chunk and returns success."""
+    from app.utils.helpers import generate_chunk_point_id
+
+    chunk_id = generate_chunk_point_id("doc-test", 17)
+    existing_payload = {
+        "chunk_index": 17,
+        "filename": "test.pdf",
+        "text": "chunk to delete",
+    }
+    fake_points = [
+        _FakePoint(point_id=chunk_id, payload=existing_payload),
+    ]
+
+    with (
+        patch("app.api.routers.ingestion.vs.scroll_chunks_by_doc_id", new_callable=AsyncMock) as mock_scroll,
+        patch("app.api.routers.ingestion.vs.get_chunk_by_doc_id_and_index", new_callable=AsyncMock) as mock_get,
+        patch("app.api.routers.ingestion.vs.delete_single_chunk", new_callable=AsyncMock) as mock_delete,
+    ):
+        mock_scroll.return_value = fake_points
+        mock_get.return_value = {"point_id": chunk_id, "payload": existing_payload}
+        mock_delete.return_value = True
+
+        transport = ASGITransport(app=app)
+        async with AsyncClient(transport=transport, base_url="http://test") as client:
+            response = await client.request(
+                "DELETE",
+                "/ingest/by-file/chunks",
+                json={
+                    "doc_id": "doc-test",
+                    "chunk_index": 17,
+                },
+            )
+
+    assert response.status_code == 200
+    data = response.json()
+    assert data["doc_id"] == "doc-test"
+    assert data["filename"] == "test.pdf"
+    assert data["chunk_index"] == 17
+    assert data["chunk_id"] == chunk_id
+    assert data["deleted"] is True
+    assert data["message"] == "Chunk deleted successfully"
+
+
+@pytest.mark.asyncio
+async def test_delete_chunk_not_found_doc_id():
+    """Delete chunk returns 404 for unknown doc_id."""
+    with patch("app.api.routers.ingestion.vs.scroll_chunks_by_doc_id", new_callable=AsyncMock) as mock_scroll:
+        mock_scroll.return_value = []
+
+        transport = ASGITransport(app=app)
+        async with AsyncClient(transport=transport, base_url="http://test") as client:
+            response = await client.request(
+                "DELETE",
+                "/ingest/by-file/chunks",
+                json={
+                    "doc_id": "unknown-doc",
+                    "chunk_index": 17,
+                },
+            )
+
+    assert response.status_code == 404
+    data = response.json()
+    assert data["title"] == "Not Found"
+
+
+@pytest.mark.asyncio
+async def test_delete_chunk_not_found_index():
+    """Delete chunk returns 404 for unknown chunk_index."""
+    from app.utils.helpers import generate_chunk_point_id
+
+    chunk_id = generate_chunk_point_id("doc-test", 5)
+    fake_points = [
+        _FakePoint(
+            point_id=chunk_id,
+            payload={
+                "chunk_index": 5,
+                "filename": "test.pdf",
+                "text": "existing",
+            },
+        ),
+    ]
+
+    with (
+        patch("app.api.routers.ingestion.vs.scroll_chunks_by_doc_id", new_callable=AsyncMock) as mock_scroll,
+        patch("app.api.routers.ingestion.vs.get_chunk_by_doc_id_and_index", new_callable=AsyncMock) as mock_get,
+    ):
+        mock_scroll.return_value = fake_points
+        mock_get.return_value = None
+
+        transport = ASGITransport(app=app)
+        async with AsyncClient(transport=transport, base_url="http://test") as client:
+            response = await client.request(
+                "DELETE",
+                "/ingest/by-file/chunks",
+                json={
+                    "doc_id": "doc-test",
+                    "chunk_index": 99,
+                },
+            )
+
+    assert response.status_code == 404
+    data = response.json()
+    assert data["title"] == "Not Found"
+
+
+@pytest.mark.asyncio
+async def test_delete_chunk_twice_returns_404():
+    """Delete chunk twice returns 404 on second call."""
+    from app.utils.helpers import generate_chunk_point_id
+
+    chunk_id = generate_chunk_point_id("doc-test", 17)
+    existing_payload = {
+        "chunk_index": 17,
+        "filename": "test.pdf",
+        "text": "chunk to delete",
+    }
+    fake_points = [
+        _FakePoint(point_id=chunk_id, payload=existing_payload),
+    ]
+
+    with (
+        patch("app.api.routers.ingestion.vs.scroll_chunks_by_doc_id", new_callable=AsyncMock) as mock_scroll,
+        patch("app.api.routers.ingestion.vs.get_chunk_by_doc_id_and_index", new_callable=AsyncMock) as mock_get,
+        patch("app.api.routers.ingestion.vs.delete_single_chunk", new_callable=AsyncMock) as mock_delete,
+    ):
+        mock_scroll.return_value = fake_points
+        mock_get.return_value = {"point_id": chunk_id, "payload": existing_payload}
+        mock_delete.return_value = True
+
+        transport = ASGITransport(app=app)
+        async with AsyncClient(transport=transport, base_url="http://test") as client:
+            response = await client.request(
+                "DELETE",
+                "/ingest/by-file/chunks",
+                json={
+                    "doc_id": "doc-test",
+                    "chunk_index": 17,
+                },
+            )
+
+    assert response.status_code == 200
+
+    with (
+        patch("app.api.routers.ingestion.vs.scroll_chunks_by_doc_id", new_callable=AsyncMock) as mock_scroll,
+        patch("app.api.routers.ingestion.vs.get_chunk_by_doc_id_and_index", new_callable=AsyncMock) as mock_get,
+    ):
+        mock_scroll.return_value = fake_points
+        mock_get.return_value = None
+
+        transport = ASGITransport(app=app)
+        async with AsyncClient(transport=transport, base_url="http://test") as client:
+            response = await client.request(
+                "DELETE",
+                "/ingest/by-file/chunks",
+                json={
+                    "doc_id": "doc-test",
+                    "chunk_index": 17,
+                },
+            )
+
+    assert response.status_code == 404
+
+
+@pytest.mark.asyncio
+async def test_delete_chunk_negative_index():
+    """Delete chunk returns 422 for negative chunk_index."""
+    transport = ASGITransport(app=app)
+    async with AsyncClient(transport=transport, base_url="http://test") as client:
+        response = await client.request(
+            "DELETE",
+            "/ingest/by-file/chunks",
+            json={
+                "doc_id": "doc-test",
+                "chunk_index": -1,
+            },
+        )
+
+    assert response.status_code == 422
+
+
+@pytest.mark.asyncio
+async def test_delete_chunk_other_chunks_unchanged():
+    """Delete chunk does not affect other chunks for the same file."""
+    from app.utils.helpers import generate_chunk_point_id
+
+    chunk_id = generate_chunk_point_id("doc-test", 17)
+    existing_payload = {
+        "chunk_index": 17,
+        "filename": "test.pdf",
+        "text": "chunk to delete",
+    }
+    fake_points = [
+        _FakePoint(point_id=chunk_id, payload=existing_payload),
+        _FakePoint(
+            point_id="chunk-other",
+            payload={
+                "chunk_index": 5,
+                "filename": "test.pdf",
+                "text": "other chunk",
+            },
+        ),
+    ]
+
+    with (
+        patch("app.api.routers.ingestion.vs.scroll_chunks_by_doc_id", new_callable=AsyncMock) as mock_scroll,
+        patch("app.api.routers.ingestion.vs.get_chunk_by_doc_id_and_index", new_callable=AsyncMock) as mock_get,
+        patch("app.api.routers.ingestion.vs.delete_single_chunk", new_callable=AsyncMock) as mock_delete,
+    ):
+        mock_scroll.return_value = fake_points
+        mock_get.return_value = {"point_id": chunk_id, "payload": existing_payload}
+        mock_delete.return_value = True
+
+        transport = ASGITransport(app=app)
+        async with AsyncClient(transport=transport, base_url="http://test") as client:
+            response = await client.request(
+                "DELETE",
+                "/ingest/by-file/chunks",
+                json={
+                    "doc_id": "doc-test",
+                    "chunk_index": 17,
+                },
+            )
+
+    assert response.status_code == 200
+    data = response.json()
+    assert data["chunk_index"] == 17

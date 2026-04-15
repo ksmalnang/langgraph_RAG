@@ -9,8 +9,14 @@ import tempfile
 from fastapi import APIRouter, Header, Query, Request, UploadFile
 
 from app.api.models import (
+    ChunkCreateRequest,
+    ChunkCreateResponse,
+    ChunkDeleteRequest,
+    ChunkDeleteResponse,
     ChunkEntry,
     ChunkListResponse,
+    ChunkUpdateRequest,
+    ChunkUpdateResponse,
     FileDeleteRequest,
     FileDeleteResponse,
     FileEntry,
@@ -21,9 +27,11 @@ from app.api.models import (
 )
 from app.config import get_settings
 from app.ingestion.pipeline import ingest_document
+from app.services import embeddings as embed_svc
 from app.services import vectorstore as vs
 from app.services.rate_limiter import allow_request
 from app.utils.exceptions import AppError, VectorStoreError
+from app.utils.helpers import generate_chunk_point_id
 from app.utils.logger import get_logger
 from app.utils.security import is_local_env
 
@@ -212,6 +220,156 @@ async def list_chunks(
         filename=filename,
         total_chunks=len(chunks),
         chunks=chunks,
+    )
+
+
+def _build_enriched_text(text: str, headings: list[str]) -> str:
+    """Build enriched text from headings and text content."""
+    if headings:
+        return f"[{headings[0]}]\n{text}"
+    return text
+
+
+@router.post("/ingest/by-file/chunks", response_model=ChunkCreateResponse)
+async def create_chunk(body: ChunkCreateRequest) -> ChunkCreateResponse:
+    """Inject a manually written chunk into an existing file's chunk inventory."""
+    existing_chunks = await vs.scroll_chunks_by_doc_id(body.doc_id)
+    if not existing_chunks:
+        raise AppError(
+            detail=f"File with doc_id='{body.doc_id}' not found.",
+            status_code=404,
+            title="Not Found",
+        )
+
+    chunk_id = generate_chunk_point_id(body.doc_id, body.chunk_index)
+
+    for point in existing_chunks:
+        payload = point.payload or {}
+        if str(point.id) == chunk_id:
+            raise AppError(
+                detail=f"Chunk at index {body.chunk_index} already exists for doc_id='{body.doc_id}'. Use PATCH to update.",
+                status_code=409,
+                title="Conflict",
+            )
+
+    first_payload = existing_chunks[0].payload or {}
+    filename = first_payload.get("filename", "")
+    doc_category = body.doc_category if body.doc_category is not None else first_payload.get("doc_category")
+    academic_year = body.academic_year if body.academic_year is not None else first_payload.get("academic_year")
+
+    enriched_text = _build_enriched_text(body.text, body.headings)
+    dense_vector = await embed_svc.embed_query(enriched_text)
+    sparse_vector = vs._encode_sparse([enriched_text])[0]
+
+    payload = {
+        "text": body.text,
+        "enriched_text": enriched_text,
+        "doc_id": body.doc_id,
+        "filename": filename,
+        "chunk_index": body.chunk_index,
+        "headings": body.headings,
+        "page": body.page,
+        "doc_category": doc_category,
+        "academic_year": academic_year,
+        "content_type": body.content_type,
+    }
+
+    await vs.upsert_single_chunk(chunk_id, dense_vector, sparse_vector, payload)
+
+    return ChunkCreateResponse(
+        doc_id=body.doc_id,
+        filename=filename,
+        chunk_index=body.chunk_index,
+        chunk_id=chunk_id,
+        created=True,
+        message="Chunk injected successfully",
+    )
+
+
+@router.patch("/ingest/by-file/chunks", response_model=ChunkUpdateResponse)
+async def update_chunk(body: ChunkUpdateRequest) -> ChunkUpdateResponse:
+    """Overwrite the text and optionally metadata of one specific chunk."""
+    existing_chunks = await vs.scroll_chunks_by_doc_id(body.doc_id)
+    if not existing_chunks:
+        raise AppError(
+            detail=f"File with doc_id='{body.doc_id}' not found.",
+            status_code=404,
+            title="Not Found",
+        )
+
+    chunk_data = await vs.get_chunk_by_doc_id_and_index(body.doc_id, body.chunk_index)
+    if chunk_data is None:
+        raise AppError(
+            detail=f"Chunk at index {body.chunk_index} not found for doc_id='{body.doc_id}'.",
+            status_code=404,
+            title="Not Found",
+        )
+
+    chunk_id = chunk_data["point_id"]
+    existing_payload = chunk_data["payload"]
+    filename = existing_payload.get("filename", "")
+
+    merged_payload = dict(existing_payload)
+    merged_payload["text"] = body.text
+
+    if body.headings is not None:
+        merged_payload["headings"] = body.headings
+    if body.page is not None:
+        merged_payload["page"] = body.page
+    if body.content_type is not None:
+        merged_payload["content_type"] = body.content_type
+
+    headings = merged_payload.get("headings", [])
+    enriched_text = _build_enriched_text(body.text, headings)
+    merged_payload["enriched_text"] = enriched_text
+
+    dense_vector = await embed_svc.embed_query(enriched_text)
+    sparse_vector = vs._encode_sparse([enriched_text])[0]
+
+    await vs.upsert_single_chunk(chunk_id, dense_vector, sparse_vector, merged_payload)
+
+    return ChunkUpdateResponse(
+        doc_id=body.doc_id,
+        filename=filename,
+        chunk_index=body.chunk_index,
+        chunk_id=chunk_id,
+        updated=True,
+        message="Chunk updated successfully",
+    )
+
+
+@router.delete("/ingest/by-file/chunks", response_model=ChunkDeleteResponse)
+async def delete_chunk(body: ChunkDeleteRequest) -> ChunkDeleteResponse:
+    """Remove one chunk from an ingested file's inventory."""
+    existing_chunks = await vs.scroll_chunks_by_doc_id(body.doc_id)
+    if not existing_chunks:
+        raise AppError(
+            detail=f"File with doc_id='{body.doc_id}' not found.",
+            status_code=404,
+            title="Not Found",
+        )
+
+    chunk_data = await vs.get_chunk_by_doc_id_and_index(body.doc_id, body.chunk_index)
+    if chunk_data is None:
+        raise AppError(
+            detail=f"Chunk at index {body.chunk_index} not found for doc_id='{body.doc_id}'.",
+            status_code=404,
+            title="Not Found",
+        )
+
+    chunk_id = chunk_data["point_id"]
+    existing_payload = chunk_data["payload"]
+    filename = existing_payload.get("filename", "")
+
+    await vs.delete_single_chunk(chunk_id)
+
+    return ChunkDeleteResponse(
+        doc_id=body.doc_id,
+        filename=filename,
+        chunk_index=body.chunk_index,
+        chunk_id=chunk_id,
+        deleted=True,
+        message="Chunk deleted successfully",
     )
 
 
