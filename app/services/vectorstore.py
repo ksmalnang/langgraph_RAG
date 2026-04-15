@@ -344,6 +344,86 @@ async def list_files() -> list[dict[str, Any]]:
     return files
 
 
+async def delete_file(doc_id: str) -> dict[str, Any]:
+    """Delete all chunks belonging to a single ingested file.
+
+    First counts the chunks and extracts metadata, then performs the deletion.
+    Returns a dict with doc_id, filename, deleted_chunks count.
+
+    Raises:
+        VectorStoreError: If the doc_id is not found (to be mapped to 404).
+    """
+    settings = get_settings()
+    client = await get_qdrant_client()
+
+    # Step 1: Count chunks and get metadata before deletion
+    start_ms = now_ms()
+    try:
+        points, _next_offset = await client.scroll(
+            collection_name=settings.collection_name,
+            scroll_filter=models.Filter(
+                must=[
+                    models.FieldCondition(
+                        key="doc_id",
+                        match=models.MatchValue(value=doc_id),
+                    )
+                ]
+            ),
+            limit=100_000,
+            with_payload=True,
+        )
+    except Exception as exc:
+        logger.error(
+            "Dependency failure dependency=qdrant operation=scroll_delete mode=unexpected doc_id=%s latency_ms=%.1f",
+            doc_id,
+            elapsed_ms(start_ms),
+            exc_info=True,
+        )
+        raise VectorStoreError("Failed to query file before deletion") from exc
+
+    chunk_count = len(points)
+    if chunk_count == 0:
+        raise VectorStoreError(f"File with doc_id='{doc_id}' not found")
+
+    # Extract filename from the first point's payload
+    filename = points[0].payload.get("filename", "") if points[0].payload else ""
+
+    # Step 2: Delete all points matching doc_id
+    selector = models.Filter(
+        must=[
+            models.FieldCondition(
+                key="doc_id",
+                match=models.MatchValue(value=doc_id),
+            )
+        ]
+    )
+
+    start_ms = now_ms()
+    try:
+        await client.delete(
+            collection_name=settings.collection_name,
+            points_selector=selector,
+            wait=True,
+        )
+    except Exception as exc:
+        logger.error(
+            "Dependency failure dependency=qdrant operation=delete_file mode=unexpected doc_id=%s latency_ms=%.1f",
+            doc_id,
+            elapsed_ms(start_ms),
+            exc_info=True,
+        )
+        raise VectorStoreError("Failed to delete file from Qdrant") from exc
+
+    logger.info(
+        "Deleted file doc_id=%s (%s) with %d chunks", doc_id, filename, chunk_count
+    )
+    return {
+        "doc_id": doc_id,
+        "filename": filename,
+        "deleted_chunks": chunk_count,
+    }
+
+
 async def close_client() -> None:
     """Close the Qdrant client."""
     global _client

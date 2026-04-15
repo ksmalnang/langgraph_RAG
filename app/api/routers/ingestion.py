@@ -8,12 +8,18 @@ import tempfile
 
 from fastapi import APIRouter, Header, Request, UploadFile
 
-from app.api.models import FileEntry, FileListResponse, IngestResponse
+from app.api.models import (
+    FileDeleteRequest,
+    FileDeleteResponse,
+    FileEntry,
+    FileListResponse,
+    IngestResponse,
+)
 from app.config import get_settings
 from app.ingestion.pipeline import ingest_document
 from app.services import vectorstore as vs
 from app.services.rate_limiter import allow_request
-from app.utils.exceptions import AppError
+from app.utils.exceptions import AppError, VectorStoreError
 from app.utils.logger import get_logger
 from app.utils.security import is_local_env
 
@@ -138,6 +144,29 @@ async def list_files() -> FileListResponse:
     return FileListResponse(
         total_files=len(entries),
         files=entries,
+    )
+
+
+@router.delete("/ingest/files", response_model=FileDeleteResponse)
+async def delete_file(body: FileDeleteRequest) -> FileDeleteResponse:
+    """Delete all chunks belonging to an ingested file."""
+    try:
+        result = await vs.delete_file(body.doc_id)
+    except VectorStoreError as exc:
+        # doc_id not found → 404
+        if "not found" in str(exc).lower():
+            raise AppError(
+                detail=f"File with doc_id='{body.doc_id}' not found.",
+                status_code=404,
+                title="Not Found",
+            ) from exc
+        raise
+    return FileDeleteResponse(
+        doc_id=result["doc_id"],
+        filename=result["filename"],
+        deleted_chunks=result["deleted_chunks"],
+        deleted=True,
+        message="File and all associated chunks deleted successfully",
     )
 
 

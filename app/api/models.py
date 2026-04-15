@@ -125,6 +125,22 @@ class FileListResponse(BaseModel):
     files: list[FileEntry]
 
 
+class FileDeleteRequest(BaseModel):
+    """Request payload for deleting an ingested file."""
+
+    doc_id: str = Field(..., description="Document ID to delete")
+
+
+class FileDeleteResponse(BaseModel):
+    """Response payload after deleting an ingested file."""
+
+    doc_id: str
+    filename: str
+    deleted_chunks: int
+    deleted: bool
+    message: str = "File and all associated chunks deleted successfully"
+
+
 class IngestResponse(BaseModel):
     doc_id: str
     filename: str
@@ -150,6 +166,8 @@ __all__ = [
     "ChatRequest",
     "ChatResponse",
     "ErrorResponse",
+    "FileDeleteRequest",
+    "FileDeleteResponse",
     "FileEntry",
     "FileListResponse",
     "HealthResponse",

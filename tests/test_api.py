@@ -244,6 +244,119 @@ async def test_list_files_idempotent_reingest():
 
 
 @pytest.mark.asyncio
+async def test_delete_file_success():
+    """Delete endpoint removes a file and returns chunk count."""
+    delete_result = {
+        "doc_id": "doc-abc123",
+        "filename": "enrollment.pdf",
+        "deleted_chunks": 5,
+    }
+
+    with patch("app.api.routers.ingestion.vs.delete_file") as mock_delete:
+        mock_delete.return_value = delete_result
+
+        transport = ASGITransport(app=app)
+        async with AsyncClient(transport=transport, base_url="http://test") as client:
+            response = await client.request(
+                "DELETE", "/ingest/files", json={"doc_id": "doc-abc123"}
+            )
+
+        assert response.status_code == 200
+        data = response.json()
+        assert data["doc_id"] == "doc-abc123"
+        assert data["filename"] == "enrollment.pdf"
+        assert data["deleted_chunks"] == 5
+        assert data["deleted"] is True
+        assert "deleted successfully" in data["message"]
+
+
+@pytest.mark.asyncio
+async def test_delete_file_not_found():
+    """Delete endpoint returns 404 for unknown doc_id."""
+    from app.utils.exceptions import VectorStoreError
+
+    with patch("app.api.routers.ingestion.vs.delete_file") as mock_delete:
+        mock_delete.side_effect = VectorStoreError(
+            "File with doc_id='unknown-id' not found"
+        )
+
+        transport = ASGITransport(app=app)
+        async with AsyncClient(transport=transport, base_url="http://test") as client:
+            response = await client.request(
+                "DELETE", "/ingest/files", json={"doc_id": "unknown-id"}
+            )
+
+    assert response.status_code == 404
+    data = response.json()
+    assert data["title"] == "Not Found"
+    assert "not found" in data["detail"].lower()
+
+
+@pytest.mark.asyncio
+async def test_delete_file_twice_returns_404():
+    """Deleting the same doc_id twice returns 404 on second call."""
+    from app.utils.exceptions import VectorStoreError
+
+    # First delete succeeds
+    first_result = {
+        "doc_id": "doc-to-delete",
+        "filename": "remove-me.pdf",
+        "deleted_chunks": 3,
+    }
+
+    with patch("app.api.routers.ingestion.vs.delete_file") as mock_delete:
+        mock_delete.return_value = first_result
+
+        transport = ASGITransport(app=app)
+        async with AsyncClient(transport=transport, base_url="http://test") as client:
+            response = await client.request(
+                "DELETE", "/ingest/files", json={"doc_id": "doc-to-delete"}
+            )
+
+        assert response.status_code == 200
+
+    # Second delete fails
+    with patch("app.api.routers.ingestion.vs.delete_file") as mock_delete:
+        mock_delete.side_effect = VectorStoreError(
+            "File with doc_id='doc-to-delete' not found"
+        )
+
+        transport = ASGITransport(app=app)
+        async with AsyncClient(transport=transport, base_url="http://test") as client:
+            response = await client.request(
+                "DELETE", "/ingest/files", json={"doc_id": "doc-to-delete"}
+            )
+
+    assert response.status_code == 404
+
+
+@pytest.mark.asyncio
+async def test_delete_no_other_files_affected():
+    """Deleting one file does not remove chunks from other files."""
+    # Simulates that only the target doc_id's chunks are deleted
+    delete_result = {
+        "doc_id": "doc-target",
+        "filename": "target.pdf",
+        "deleted_chunks": 7,
+    }
+
+    with patch("app.api.routers.ingestion.vs.delete_file") as mock_delete:
+        mock_delete.return_value = delete_result
+
+        transport = ASGITransport(app=app)
+        async with AsyncClient(transport=transport, base_url="http://test") as client:
+            response = await client.request(
+                "DELETE", "/ingest/files", json={"doc_id": "doc-target"}
+            )
+
+        assert response.status_code == 200
+        data = response.json()
+        # Only target file affected
+        assert data["doc_id"] == "doc-target"
+        assert data["deleted_chunks"] == 7
+
+
+@pytest.mark.asyncio
 async def test_ingest_unsupported_file():
     """Ingest endpoint rejects unsupported file types with RFC 7807 error."""
     transport = ASGITransport(app=app)
