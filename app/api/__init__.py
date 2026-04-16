@@ -7,6 +7,7 @@ from app.api.routers import (
     chat_router,
     health_router,
     ingestion_router,
+    telegram_router,
 )
 
 __all__ = [
@@ -14,4 +15,5 @@ __all__ = [
     "chat_router",
     "health_router",
     "ingestion_router",
+    "telegram_router",
 ]
