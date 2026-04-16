@@ -10,7 +10,6 @@ from app.eval import retrieval_eval
 from app.eval.retrieval_eval import evaluate_from_predictions, load_benchmark_cases
 from app.utils.helpers import generate_doc_id
 
-
 FIXTURES_DIR = Path("tests/fixtures")
 DATASET_PATH = FIXTURES_DIR / "retrieval_eval.json"
 PREDICTIONS_PATH = FIXTURES_DIR / "retrieval_eval_predictions.json"

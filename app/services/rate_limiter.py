@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from collections import defaultdict, deque
 import time
-from typing import DefaultDict
 
 from app.services.memory import get_redis
 from app.utils.logger import get_logger
@@ -16,7 +15,7 @@ class InMemoryRateLimiter:
     """Per-process sliding-window limiter keyed by route/client fingerprint."""
 
     def __init__(self) -> None:
-        self._buckets: DefaultDict[str, deque[float]] = defaultdict(deque)
+        self._buckets: defaultdict[str, deque[float]] = defaultdict(deque)
 
     def allow(self, key: str, limit: int, window_seconds: int) -> bool:
         now = time.monotonic()

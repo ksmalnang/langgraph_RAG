@@ -26,9 +26,9 @@ async def test_chat_requires_student_access_token_for_student_bound_session():
     valid_session_id = str(uuid.uuid4())
 
     with (
-        patch("app.api.chat.has_student_access_binding", new_callable=AsyncMock) as mock_has,
+        patch("app.api.routers.chat.has_student_access_binding", new_callable=AsyncMock) as mock_has,
         patch(
-            "app.api.chat.verify_student_access_token",
+            "app.api.routers.chat.verify_student_access_token",
             new_callable=AsyncMock,
         ) as mock_verify,
     ):
@@ -52,12 +52,12 @@ async def test_chat_allows_student_bound_session_with_valid_access_token():
     mock_result = {"answer": "ok", "sources": []}
 
     with (
-        patch("app.api.chat.has_student_access_binding", new_callable=AsyncMock) as mock_has,
+        patch("app.api.routers.chat.has_student_access_binding", new_callable=AsyncMock) as mock_has,
         patch(
-            "app.api.chat.verify_student_access_token",
+            "app.api.routers.chat.verify_student_access_token",
             new_callable=AsyncMock,
         ) as mock_verify,
-        patch("app.api.chat._get_graph") as mock_get_graph,
+        patch("app.api.routers.chat._get_graph") as mock_get_graph,
     ):
         mock_has.return_value = True
         mock_verify.return_value = True
@@ -87,7 +87,7 @@ async def test_ingest_disabled_without_key_in_non_local_env():
         ingest_max_upload_mb=20,
     )
 
-    with patch("app.api.ingest.get_settings", return_value=fake_settings):
+    with patch("app.api.routers.ingestion.get_settings", return_value=fake_settings):
         transport = ASGITransport(app=app)
         async with AsyncClient(transport=transport, base_url="http://test") as client:
             resp = await client.post(
@@ -108,7 +108,7 @@ async def test_ingest_requires_token_when_configured():
         ingest_max_upload_mb=20,
     )
 
-    with patch("app.api.ingest.get_settings", return_value=fake_settings):
+    with patch("app.api.routers.ingestion.get_settings", return_value=fake_settings):
         transport = ASGITransport(app=app)
         async with AsyncClient(transport=transport, base_url="http://test") as client:
             resp = await client.post(
@@ -128,8 +128,8 @@ async def test_chat_rate_limited():
     mock_result = {"answer": "ok", "sources": []}
 
     with (
-        patch("app.api.chat.get_settings", return_value=fake_settings),
-        patch("app.api.chat._get_graph") as mock_get_graph,
+        patch("app.api.routers.chat.get_settings", return_value=fake_settings),
+        patch("app.api.routers.chat._get_graph") as mock_get_graph,
     ):
         mock_graph = AsyncMock()
         mock_graph.ainvoke.return_value = mock_result

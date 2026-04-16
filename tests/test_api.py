@@ -1129,7 +1129,6 @@ async def test_update_chunk_not_found_doc_id():
 @pytest.mark.asyncio
 async def test_update_chunk_not_found_index():
     """Update chunk returns 404 for unknown chunk_index."""
-    from app.utils.helpers import generate_chunk_point_id
 
     fake_points = [
         _FakePoint(

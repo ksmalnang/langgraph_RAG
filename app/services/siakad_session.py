@@ -10,8 +10,8 @@ from bs4 import BeautifulSoup
 import httpx
 
 from app.config import get_settings
-from app.services.resilience import retry_async
 from app.services.memory import get_redis
+from app.services.resilience import retry_async
 from app.utils.exceptions import MemoryStoreError, SiakadAuthError
 from app.utils.security import mask_session_id
 
@@ -155,14 +155,14 @@ async def init_siakad_session(session_id: str, email: str, password: str) -> boo
         logger.warning(
             "Dependency failure dependency=siakad operation=init_session flow=student mode=auth session_id=%s detail=%s",
             mask_session_id(session_id),
-            exc.message,
+            exc.detail,
         )
         return False
     except MemoryStoreError as exc:
         logger.error(
             "Dependency failure dependency=redis operation=setex_siakad_session flow=student mode=cache_write session_id=%s detail=%s",
             mask_session_id(session_id),
-            exc.message,
+            exc.detail,
         )
         return False
     except Exception as exc:

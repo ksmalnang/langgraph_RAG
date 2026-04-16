@@ -86,10 +86,9 @@ async def ensure_collection(vector_size: int) -> None:
             retry_on=(ResponseHandlingException, TimeoutError),
         )
     except Exception as exc:
-        logger.error(
+        logger.exception(
             "Dependency failure dependency=qdrant operation=get_collections mode=unexpected latency_ms=%.1f",
             elapsed_ms(start_ms),
-            exc_info=True,
         )
         raise VectorStoreError("Failed to read Qdrant collections") from exc
     names = [c.name for c in collections.collections]
@@ -112,10 +111,9 @@ async def ensure_collection(vector_size: int) -> None:
                 },
             )
         except Exception as exc:
-            logger.error(
+            logger.exception(
                 "Dependency failure dependency=qdrant operation=create_collection mode=unexpected latency_ms=%.1f",
                 elapsed_ms(start_ms),
-                exc_info=True,
             )
             raise VectorStoreError("Failed to create Qdrant collection") from exc
         logger.info(
@@ -165,11 +163,10 @@ async def upsert_points(
             points=points,
         )
     except Exception as exc:
-        logger.error(
+        logger.exception(
             "Dependency failure dependency=qdrant operation=upsert mode=unexpected points=%d latency_ms=%.1f",
             len(points),
             elapsed_ms(start_ms),
-            exc_info=True,
         )
         raise VectorStoreError("Failed to upsert vectors to Qdrant") from exc
     logger.info("Upserted %d points into '%s'", len(points), settings.collection_name)
@@ -197,11 +194,10 @@ async def delete_points_by_doc_id(doc_id: str) -> None:
             wait=True,
         )
     except Exception as exc:
-        logger.error(
+        logger.exception(
             "Dependency failure dependency=qdrant operation=delete_doc_points mode=unexpected doc_id=%s latency_ms=%.1f",
             doc_id,
             elapsed_ms(start_ms),
-            exc_info=True,
         )
         raise VectorStoreError("Failed to delete existing document points") from exc
 
@@ -256,10 +252,9 @@ async def hybrid_search(
             retry_on=(ResponseHandlingException, TimeoutError),
         )
     except Exception as exc:
-        logger.error(
+        logger.exception(
             "Dependency failure dependency=qdrant operation=query_points mode=unexpected latency_ms=%.1f",
             elapsed_ms(start_ms),
-            exc_info=True,
         )
         raise VectorStoreError("Failed to query Qdrant") from exc
 
@@ -300,10 +295,9 @@ async def list_files() -> list[dict[str, Any]]:
             with_payload=True,
         )
     except Exception as exc:
-        logger.error(
+        logger.exception(
             "Dependency failure dependency=qdrant operation=scroll mode=unexpected latency_ms=%.1f",
             elapsed_ms(start_ms),
-            exc_info=True,
         )
         raise VectorStoreError("Failed to list files from Qdrant") from exc
 
@@ -373,11 +367,10 @@ async def delete_file(doc_id: str) -> dict[str, Any]:
             with_payload=True,
         )
     except Exception as exc:
-        logger.error(
+        logger.exception(
             "Dependency failure dependency=qdrant operation=scroll_delete mode=unexpected doc_id=%s latency_ms=%.1f",
             doc_id,
             elapsed_ms(start_ms),
-            exc_info=True,
         )
         raise VectorStoreError("Failed to query file before deletion") from exc
 
@@ -406,11 +399,10 @@ async def delete_file(doc_id: str) -> dict[str, Any]:
             wait=True,
         )
     except Exception as exc:
-        logger.error(
+        logger.exception(
             "Dependency failure dependency=qdrant operation=delete_file mode=unexpected doc_id=%s latency_ms=%.1f",
             doc_id,
             elapsed_ms(start_ms),
-            exc_info=True,
         )
         raise VectorStoreError("Failed to delete file from Qdrant") from exc
 
@@ -464,11 +456,10 @@ async def scroll_chunks_by_doc_id(doc_id: str) -> list[dict[str, Any]]:
                 break
             offset = next_offset
     except Exception as exc:
-        logger.error(
+        logger.exception(
             "Dependency failure dependency=qdrant operation=scroll_chunks mode=unexpected doc_id=%s latency_ms=%.1f",
             doc_id,
             elapsed_ms(start_ms),
-            exc_info=True,
         )
         raise VectorStoreError("Failed to retrieve chunks from Qdrant") from exc
 
@@ -513,11 +504,10 @@ async def rename_file(doc_id: str, new_filename: str) -> dict[str, Any]:
             with_vectors=False,
         )
     except Exception as exc:
-        logger.error(
+        logger.exception(
             "Dependency failure dependency=qdrant operation=scroll_rename mode=unexpected doc_id=%s latency_ms=%.1f",
             doc_id,
             elapsed_ms(start_ms),
-            exc_info=True,
         )
         raise VectorStoreError("Failed to query file before rename") from exc
 
@@ -540,11 +530,10 @@ async def rename_file(doc_id: str, new_filename: str) -> dict[str, Any]:
             exact=True,
         )
     except Exception as exc:
-        logger.error(
+        logger.exception(
             "Dependency failure dependency=qdrant operation=count_rename mode=unexpected doc_id=%s latency_ms=%.1f",
             doc_id,
             elapsed_ms(start_ms),
-            exc_info=True,
         )
         raise VectorStoreError("Failed to count chunks before rename") from exc
 
@@ -568,11 +557,10 @@ async def rename_file(doc_id: str, new_filename: str) -> dict[str, Any]:
             points=points_filter,
         )
     except Exception as exc:
-        logger.error(
+        logger.exception(
             "Dependency failure dependency=qdrant operation=set_payload_rename mode=unexpected doc_id=%s latency_ms=%.1f",
             doc_id,
             elapsed_ms(start_ms),
-            exc_info=True,
         )
         raise VectorStoreError("Failed to update filename in Qdrant") from exc
 
@@ -622,12 +610,11 @@ async def get_chunk_by_doc_id_and_index(
             with_vectors=False,
         )
     except Exception as exc:
-        logger.error(
+        logger.exception(
             "Dependency failure dependency=qdrant operation=get_chunk mode=unexpected doc_id=%s chunk_index=%d latency_ms=%.1f",
             doc_id,
             chunk_index,
             elapsed_ms(start_ms),
-            exc_info=True,
         )
         raise VectorStoreError("Failed to retrieve chunk from Qdrant") from exc
 
@@ -663,11 +650,10 @@ async def upsert_single_chunk(
             points=[point],
         )
     except Exception as exc:
-        logger.error(
+        logger.exception(
             "Dependency failure dependency=qdrant operation=upsert_single_chunk mode=unexpected point_id=%s latency_ms=%.1f",
             point_id,
             elapsed_ms(start_ms),
-            exc_info=True,
         )
         raise VectorStoreError("Failed to upsert chunk to Qdrant") from exc
 
@@ -690,11 +676,10 @@ async def delete_single_chunk(point_id: str) -> bool:
             wait=True,
         )
     except Exception as exc:
-        logger.error(
+        logger.exception(
             "Dependency failure dependency=qdrant operation=delete_single_chunk mode=unexpected point_id=%s latency_ms=%.1f",
             point_id,
             elapsed_ms(start_ms),
-            exc_info=True,
         )
         raise VectorStoreError("Failed to delete chunk from Qdrant") from exc
 

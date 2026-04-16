@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
-from typing import Any, Literal
+from typing import Any, Literal, NotRequired, Required
 
-from typing_extensions import NotRequired, Required, TypedDict
+from typing_extensions import TypedDict
 
 RouteName = Literal[
     "fallback",
