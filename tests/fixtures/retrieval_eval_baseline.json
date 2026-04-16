@@ -6,8 +6,8 @@
   "retrieval_config": {
     "k_eval": 5,
     "retrieval_top_k": 10,
-    "rerank_top_n": 5,
-    "relevance_threshold": 0.17
+    "rerank_top_n": 10,
+    "relevance_threshold": 0.05
   },
   "dependencies": {
     "embedding_model": "qwen/qwen3-embedding-8b",

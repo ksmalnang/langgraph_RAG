@@ -6,7 +6,6 @@ from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 
-from app.api.models import ErrorResponse
 from app.utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -118,6 +117,7 @@ _STATUS_TITLES: dict[int, str] = {
 
 def register_exception_handlers(app: FastAPI) -> None:
     """Attach custom exception handlers to the FastAPI app."""
+    from app.api.models import ErrorResponse
 
     @app.exception_handler(AppError)
     async def handle_app_error(request: Request, exc: AppError) -> JSONResponse:
