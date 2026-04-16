@@ -20,7 +20,7 @@ import socket
 import sys
 from typing import Any
 
-from pythonjsonlogger.jsonlogger import JsonFormatter as BaseJsonFormatter
+from pythonjsonlogger.json import JsonFormatter as BaseJsonFormatter
 
 from app.config import get_settings
 
