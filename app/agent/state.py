@@ -21,6 +21,7 @@ class ChatTurn(TypedDict, total=False):
     role: Required[str]
     content: Required[str]
     timestamp: NotRequired[str | None]
+    message_id: NotRequired[str | None]
 
 
 class SourceReference(TypedDict, total=False):
@@ -64,6 +65,7 @@ class SharedAgentState(TypedDict, total=False):
 
     route: NotRequired[RouteName]
     need_retrieval: NotRequired[bool]
+    message_id: NotRequired[str]
 
 
 class PublicAssistantState(TypedDict, total=False):

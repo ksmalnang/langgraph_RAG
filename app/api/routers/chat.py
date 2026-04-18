@@ -62,11 +62,12 @@ async def _verify_token_if_bound(session_id: str, token: str | None) -> None:
         )
 
 
-def _build_initial_state(query: str, session_id: str) -> dict:
+def _build_initial_state(query: str, session_id: str, message_id: str) -> dict:
     """Construct the LangGraph agent input payload."""
     return {
         "query": query,
         "session_id": session_id,
+        "message_id": message_id,
         "chat_history": [],
         "need_retrieval": False,
         "documents": [],
@@ -127,7 +128,11 @@ async def chat(
         len(payload.message),
     )
 
-    initial_state = _build_initial_state(payload.message, session_id)
+    # Generate message_id before the graph runs so store_memory node
+    # can persist it alongside the assistant turn (avoids a double write).
+    message_id = str(uuid.uuid4())
+
+    initial_state = _build_initial_state(payload.message, session_id, message_id)
 
     try:
         graph = _get_graph()
@@ -142,13 +147,17 @@ async def chat(
             title="Agent Invocation Failed",
         ) from exc
 
+    answer = result.get("answer", "Sorry, I couldn't generate an answer.")
     sources = [
         SourceChunk(**s) for s in result.get("sources", []) if isinstance(s, dict)
     ]
 
+    # store_memory (graph node) already persisted the turn — no second write needed.
+
     return ChatResponse(
         session_id=session_id,
-        answer=result.get("answer", "Sorry, I couldn't generate an answer."),
+        message_id=message_id,
+        answer=answer,
         sources=sources,
     )
 
@@ -171,6 +180,7 @@ async def get_chat_history(
             role=turn["role"],
             content=turn["content"],
             timestamp=turn.get("timestamp"),
+            message_id=turn.get("message_id"),
         )
         for turn in history
     ]
