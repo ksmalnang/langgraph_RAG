@@ -8,7 +8,14 @@ from typing import AsyncIterator
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.api.routers import auth_router, chat_router, health_router, ingestion_router, telegram_router
+from app.api.routers import (
+    auth_router,
+    chat_router,
+    feedback_router,
+    health_router,
+    ingestion_router,
+    telegram_router,
+)
 from app.config import get_settings
 from app.utils.exceptions import register_exception_handlers
 from app.utils.logger import get_logger, setup_logging
@@ -69,6 +76,7 @@ app.include_router(health_router)
 app.include_router(auth_router)
 app.include_router(ingestion_router)
 app.include_router(chat_router)
+app.include_router(feedback_router)
 app.include_router(telegram_router)
 
 # ── Exception handlers ──────────────────────────────────

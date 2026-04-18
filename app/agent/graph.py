@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from langgraph.graph import END, START, StateGraph
+from langgraph.graph.state import CompiledStateGraph
 
 from app.agent.nodes.classify import classify_query
 from app.agent.nodes.memory import load_memory, store_memory
@@ -31,11 +32,11 @@ def route_after_classify(state: AgentState) -> str:
 # ── Graph builder ───────────────────────────────────────
 
 
-def build_graph() -> StateGraph:
+def build_graph() -> CompiledStateGraph:
     """Construct and return the compiled top-level LangGraph agent."""
     graph = StateGraph(AgentState)
     public_assistant = build_public_assistant()
-    student_assistant = build_student_assistant()
+    student_assistant = build_student_assistant(public_assistant)
 
     graph.add_node("load_memory", load_memory)
     graph.add_node("classify_query", classify_query)

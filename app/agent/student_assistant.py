@@ -25,7 +25,7 @@ def route_after_fetch(state: AgentState) -> str:
     return "generate_answer"
 
 
-def build_student_assistant():
+def build_student_assistant(public_assistant=None):
     """Build the student/SIAKAD assistant subgraph."""
     graph = StateGraph(AgentState)
 
@@ -33,7 +33,7 @@ def build_student_assistant():
     graph.add_node("fetch_nilai_semester", fetch_nilai_semester)
     graph.add_node("generate_answer", generate_answer)
     graph.add_node("generate_answer_fallback", generate_answer_fallback)
-    graph.add_node("public_assistant", build_public_assistant())
+    graph.add_node("public_assistant", public_assistant or build_public_assistant())
 
     graph.add_edge(START, "fetch_student_data")
     graph.add_conditional_edges(
