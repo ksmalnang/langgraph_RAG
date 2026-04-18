@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from enum import Enum
+
 from pydantic import BaseModel, EmailStr, Field, field_validator
 
 # ── Shared / Base ────────────────────────────────────────
@@ -86,6 +88,10 @@ class SourceChunk(BaseModel):
 
 class ChatResponse(BaseModel):
     session_id: str
+    message_id: str = Field(
+        ...,
+        description="Unique ID for this assistant response — use when submitting feedback",
+    )
     answer: str
     sources: list[SourceChunk] = Field(default_factory=list)
 
@@ -96,6 +102,7 @@ class ChatHistoryItem(BaseModel):
     role: str  # "user" | "assistant"
     content: str
     timestamp: str | None = None
+    message_id: str | None = None
 
 
 class ChatHistoryResponse(BaseModel):
@@ -274,6 +281,56 @@ class ChunkDeleteResponse(BaseModel):
     message: str = "Chunk deleted successfully"
 
 
+# ── Feedback ────────────────────────────────────────────
+
+
+class FeedbackRating(str, Enum):
+    """Feedback rating type for a chat response."""
+
+    thumbs_up = "thumbs_up"
+    thumbs_down = "thumbs_down"
+
+
+class FeedbackRequest(BaseModel):
+    """Request payload for submitting thumbs-up / thumbs-down feedback."""
+
+    message_id: str = Field(..., description="ID of the assistant message being rated")
+    rating: FeedbackRating = Field(..., description="'thumbs_up' or 'thumbs_down'")
+    comment: str | None = Field(
+        default=None,
+        max_length=500,
+        description="Optional free-text comment",
+    )
+
+
+class FeedbackResponse(BaseModel):
+    """Response payload after feedback is submitted."""
+
+    session_id: str
+    message_id: str
+    rating: FeedbackRating
+    comment: str | None = None
+    created_at: str
+    message: str = "Feedback submitted successfully"
+
+
+class FeedbackItem(BaseModel):
+    """Single feedback record returned in the listing endpoint."""
+
+    message_id: str
+    rating: FeedbackRating
+    comment: str | None = None
+    created_at: str
+
+
+class SessionFeedbackResponse(BaseModel):
+    """Response payload for GET /chat/{session_id}/feedbacks."""
+
+    session_id: str
+    total: int
+    feedbacks: list[FeedbackItem]
+
+
 # ── Health ──────────────────────────────────────────────
 
 
@@ -297,6 +354,10 @@ __all__ = [
     "ChunkUpdateRequest",
     "ChunkUpdateResponse",
     "ErrorResponse",
+    "FeedbackItem",
+    "FeedbackRating",
+    "FeedbackRequest",
+    "FeedbackResponse",
     "FileDeleteRequest",
     "FileDeleteResponse",
     "FileEntry",
@@ -307,6 +368,7 @@ __all__ = [
     "IngestResponse",
     "LoginRequest",
     "LoginResponse",
+    "SessionFeedbackResponse",
     "SourceChunk",
     # ── Telegram ──
     "TelegramChat",

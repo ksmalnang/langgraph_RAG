@@ -22,7 +22,13 @@ async def store_memory(state: AgentState) -> dict:
     session_id = state["session_id"]
     query = state["query"]
     answer = state.get("answer", "")
+    message_id = state.get("message_id")
 
-    await save_turn(session_id, user_message=query, assistant_message=answer)
+    await save_turn(
+        session_id,
+        user_message=query,
+        assistant_message=answer,
+        message_id=message_id,
+    )
     logger.debug("Stored turn for session %s", session_id)
     return {}
